@@ -11,6 +11,7 @@ import {ProductPrice} from '~/components/ProductPrice';
 import {ProductImage} from '~/components/ProductImage';
 import {ProductForm} from '~/components/ProductForm';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
+import {Slider} from '~/components/Slider';
 
 /**
  * @type {Route.MetaFunction}
@@ -83,9 +84,48 @@ function loadDeferredData({context, params}) {
   return {};
 }
 
+
+function MediaGallery({images}) {
+  return (
+    <div>
+
+           <div className="md:hidden">
+        <Slider images={images} />
+      </div>
+
+      <div className="hidden sm:grid grid-cols-2 gap-4">
+        {images.map((img) => (
+          <img
+            key={img.id}
+            src={img.url}
+            alt={img.altText}
+            loading="lazy"
+            className="w-full h-auto object-cover rounded-lg"
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function Product() {
   /** @type {LoaderReturnData} */
+
+  const color_labels = ["color", "colour"];
+
   const {product} = useLoaderData();
+
+  function extractVariantColor(variant) {
+
+  const labels = color_labels.map((c) => c.toLowerCase());
+
+  const colorOption = variant.selectedOptions.find((opt) =>
+    labels.includes(opt.name.toLowerCase())
+  );
+
+  return colorOption?.value || null;
+}
+
 
   // Optimistically selects a variant with given available variant information
   const selectedVariant = useOptimisticVariant(
@@ -93,6 +133,14 @@ export default function Product() {
     getAdjacentAndFirstAvailableVariants(product),
   );
 
+  const selectedColor = extractVariantColor(selectedVariant);
+
+  const filteredImages = product.images.nodes.filter(image => {
+    if (!selectedColor) return true;
+    const alt = image?.altText?.toLowerCase() || '';
+    return alt.includes(selectedColor.toLowerCase());
+  });
+  
   // Sets the search param to the selected variant without navigation
   // only when no search params are set in the url
   useSelectedOptionInUrlParam(selectedVariant.selectedOptions);
@@ -107,7 +155,11 @@ export default function Product() {
 
   return (
     <div className="product">
-      <ProductImage image={selectedVariant?.image} />
+
+      {product.template?.value === "color-variant-images" && <MediaGallery images={filteredImages} />}
+
+      {product.template?.value !== "color-variant-images" && <ProductImage image={selectedVariant?.image} />}
+
       <div className="product-main">
         <h1>{title}</h1>
         <ProductPrice
@@ -190,6 +242,21 @@ const PRODUCT_FRAGMENT = `#graphql
     title
     vendor
     handle
+   template: metafield(namespace: "custom", key: "template") {
+
+      value
+    }
+    images(first: 100) { nodes { id url altText } }
+    variants(first: 100) {
+    nodes {
+    id
+    title
+    selectedOptions {
+    name
+    value
+    }
+    }
+    }
     descriptionHtml
     description
     encodedVariantExistence

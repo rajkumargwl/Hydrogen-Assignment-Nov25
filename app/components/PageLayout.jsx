@@ -10,6 +10,9 @@ import {
 } from '~/components/SearchFormPredictive';
 import {SearchResultsPredictive} from '~/components/SearchResultsPredictive';
 
+import {QuickViewProvider} from '~/providers/QuickViewProvider.jsx';
+import QuickViewDialog from '~/components/QuickViewDialog';
+
 /**
  * @param {PageLayoutProps}
  */
@@ -34,7 +37,13 @@ export function PageLayout({
           publicStoreDomain={publicStoreDomain}
         />
       )}
-      <main>{children}</main>
+      <main>
+         <QuickViewProvider>
+           <QuickViewDialog />
+           {children}
+         </QuickViewProvider>
+       
+        </main>
       <Footer
         footer={footer}
         header={header}

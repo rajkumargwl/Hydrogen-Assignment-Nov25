@@ -572,3 +572,22 @@ button.reset:hover:not(:has(> *)) {
   gap: 0.75rem;
   flex-wrap: wrap;
 }
+
+.quickview-product-title {
+  font-size: var(--font-size-mobile);
+  @media (min-width: 778px) {
+    font-size: var(--font-size-desktop);
+  }
+}
+.quickview-price {
+  font-size: var(--font-size-mobile);
+  @media (min-width: 778px) {
+    font-size: var(--font-size-desktop);
+  }
+}
+.product-atc-quickview {
+  font-size: var(--font-size-mobile);
+  @media (min-width: 778px) {
+    font-size: var(--font-size-desktop);
+  }
+}
