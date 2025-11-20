@@ -20,15 +20,20 @@ export function CartLineItem({
   layout: CartLayout;
   line: CartLine;
 }) {
-  const {id, merchandise} = line;
+   
+   const {id, merchandise, attributes} = line;
   const {product, title, image, selectedOptions} = merchandise;
   const lineItemUrl = useVariantUrl(product.handle, selectedOptions);
   const {close} = useAside();
+  const variantImage =
+    attributes?.find((a) => a.key === "variant_image")?.value || image?.url;
+    console.log("Cart line attributes:", JSON.stringify(line.attributes ,null,2) );
 
   return (
     <li key={id} className="cart-line">
       {image && (
         <Image
+         src={variantImage}
           alt={title}
           aspectRatio="1/1"
           data={image}

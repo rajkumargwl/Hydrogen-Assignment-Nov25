@@ -91,7 +91,15 @@ export function ProductForm({
                         }
                       }}
                     >
-                      <ProductOptionSwatch swatch={swatch} name={name} />
+{
+  option.name.toLowerCase() === "color" 
+    ? (
+      <div className="px-4 py-2 bg-white/70 backdrop-blur-sm rounded-lg border border-white/20 shadow-sm">
+        <span className="text-sm font-semibold text-gray-800">{name}</span>
+      </div>
+    )
+    : <ProductOptionSwatch swatch={swatch} name={name} />
+}
                     </button>
                   );
                 }
@@ -112,7 +120,13 @@ export function ProductForm({
                 {
                   merchandiseId: selectedVariant.id,
                   quantity: 1,
-                  selectedVariant,
+                  // selectedVariant,
+                  attributes: [
+              {
+                key: "variant_image",
+                value: selectedVariant?.image?.url || ""
+              }
+            ]
                 },
               ]
             : []

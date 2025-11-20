@@ -17,6 +17,23 @@ import resetStyles from '~/styles/reset.css?url';
 import appStyles from '~/styles/app.css?url';
 import tailwindCss from './styles/tailwind.css?url';
 import {PageLayout} from './components/PageLayout';
+// --- Quick View Global Settings Query ---
+const QUICK_VIEW_SETTINGS_QUERY = `
+  query QuickViewSetting {
+    shop {
+      metafield(namespace: "custom", key: "global") {
+        reference {
+          ... on Metaobject {
+            fields {
+              key
+              value
+            }
+          }
+        }
+      }
+    }
+  }
+`;
 
 export type RootLoader = typeof loader;
 
@@ -101,7 +118,7 @@ export async function loader(args: Route.LoaderArgs) {
 async function loadCriticalData({context}: Route.LoaderArgs) {
   const {storefront} = context;
 
-  const [header] = await Promise.all([
+  const [header, quickViewSettings] = await Promise.all([
     storefront.query(HEADER_QUERY, {
       cache: storefront.CacheLong(),
       variables: {
@@ -109,9 +126,18 @@ async function loadCriticalData({context}: Route.LoaderArgs) {
       },
     }),
     // Add other queries here, so that they are loaded in parallel
+    storefront.query(QUICK_VIEW_SETTINGS_QUERY).catch(() => null),
   ]);
-
-  return {header};
+  const quickViewConfig =
+    quickViewSettings?.shop?.metafield?.reference?.fields?.reduce(
+      (acc: any, field: any) => {
+        acc[field.key] = field.value;
+        return acc;
+      },
+      {}
+    ) ?? null;
+  
+  return {header, quickViewConfig};
 }
 
 /**
@@ -144,7 +170,7 @@ function loadDeferredData({context}: Route.LoaderArgs) {
 
 export function Layout({children}: {children?: React.ReactNode}) {
   const nonce = useNonce();
-
+ 
   return (
     <html lang="en">
       <head>

@@ -1,16 +1,23 @@
-import {redirect, useLoaderData} from 'react-router';
-import type {Route} from './+types/collections.$handle';
+import {redirect, useLoaderData, useRouteLoaderData} from 'react-router';
+// import type {Route} from './+types/collections.$handle';
 import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
 import {ProductItem} from '~/components/ProductItem';
 import type {ProductItemFragment} from 'storefrontapi.generated';
 
-export const meta: Route.MetaFunction = ({data}) => {
-  return [{title: `Hydrogen | ${data?.collection.title ?? ''} Collection`}];
+import { useState } from 'react';
+import QuickViewModal from '~/components/QuickViewModal';
+import type { LoaderFunctionArgs, MetaFunction } from "@shopify/hydrogen";
+
+
+export const meta: MetaFunction = ({ data }) => {
+
+  return [{title: `Reagal Forge | Collections`}];
 };
 
-export async function loader(args: Route.LoaderArgs) {
+export async function loader(args: LoaderFunctionArgs) {
+
   // Start fetching non-critical data without blocking time to first byte
   const deferredData = loadDeferredData(args);
 
@@ -24,7 +31,8 @@ export async function loader(args: Route.LoaderArgs) {
  * Load data necessary for rendering content above the fold. This is the critical data
  * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
  */
-async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
+async function loadCriticalData({ context, params, request }: LoaderFunctionArgs) {
+
   const {handle} = params;
   const {storefront} = context;
   const paginationVariables = getPaginationVariables(request, {
@@ -50,7 +58,7 @@ async function loadCriticalData({context, params, request}: Route.LoaderArgs) {
 
   // The API handle might be localized, so redirect to the localized handle
   redirectIfHandleIsLocalized(request, {handle, data: collection});
-
+ 
   return {
     collection,
   };
@@ -80,10 +88,13 @@ export default function Collection() {
           <ProductItem
             key={product.id}
             product={product}
+            
             loading={index < 8 ? 'eager' : undefined}
           />
+
         )}
       </PaginatedResourceSection>
+  
       <Analytics.CollectionView
         data={{
           collection: {
@@ -95,7 +106,6 @@ export default function Collection() {
     </div>
   );
 }
-
 const PRODUCT_ITEM_FRAGMENT = `#graphql
   fragment MoneyProductItem on MoneyV2 {
     amount
@@ -105,6 +115,18 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
     id
     handle
     title
+    description
+     metafield(namespace: "custom", key: "quick_view_layout") {
+    value
+    reference {
+      ... on Metaobject {
+        fields {
+          key
+          value
+        }
+      }
+    }
+  }
     featuredImage {
       id
       altText
@@ -118,6 +140,44 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
       }
       maxVariantPrice {
         ...MoneyProductItem
+      }
+    }
+    variants(first: 100) {
+      nodes {
+        id
+        title
+        availableForSale
+        sku
+        price {
+          ...MoneyProductItem
+        }
+        compareAtPrice {
+          ...MoneyProductItem
+        }
+        image {
+          id
+          altText
+          url
+          width
+          height
+        }
+        selectedOptions {
+          name
+          value
+        }
+      }
+    }
+    options {
+      name
+      values
+    }
+    images(first: 100) {
+      nodes {
+        id
+        altText
+        url
+        width
+        height
       }
     }
   }

@@ -1,15 +1,17 @@
 import {Await, useLoaderData, Link} from 'react-router';
 import type {Route} from './+types/_index';
-import {Suspense} from 'react';
+import {Suspense, useState} from 'react';
 import {Image} from '@shopify/hydrogen';
 import type {
   FeaturedCollectionFragment,
   RecommendedProductsQuery,
 } from 'storefrontapi.generated';
 import {ProductItem} from '~/components/ProductItem';
+import { useRouteLoaderData } from 'react-router';
+import HomeBanner from '~/components/HomeBanner';
 
 export const meta: Route.MetaFunction = () => {
-  return [{title: 'Hydrogen | Home'}];
+  return [{title: 'Home | Regal Forge'}];
 };
 
 export async function loader(args: Route.LoaderArgs) {
@@ -58,9 +60,13 @@ function loadDeferredData({context}: Route.LoaderArgs) {
 
 export default function Homepage() {
   const data = useLoaderData<typeof loader>();
+   const rootData = useRouteLoaderData('root');
+const quickViewConfig = rootData?.quickViewConfig;
+
   return (
     <div className="home">
-      <FeaturedCollection collection={data.featuredCollection} />
+      {/* <FeaturedCollection collection={data.featuredCollection} /> */}
+      <HomeBanner />
       <RecommendedProducts products={data.recommendedProducts} />
     </div>
   );
@@ -93,26 +99,33 @@ function RecommendedProducts({
 }: {
   products: Promise<RecommendedProductsQuery | null>;
 }) {
+ 
+
+  // Get Quick View Global Config from root loader
   return (
     <div className="recommended-products">
       <h2>Recommended Products</h2>
+
       <Suspense fallback={<div>Loading...</div>}>
         <Await resolve={products}>
           {(response) => (
             <div className="recommended-products-grid">
               {response
                 ? response.products.nodes.map((product) => (
-                    <ProductItem key={product.id} product={product} />
+                    <ProductItem
+                      key={product.id}
+                      product={product}
+                    />
                   ))
                 : null}
             </div>
           )}
         </Await>
       </Suspense>
-      <br />
     </div>
   );
 }
+
 
 const FEATURED_COLLECTION_QUERY = `#graphql
   fragment FeaturedCollection on Collection {
@@ -138,29 +151,91 @@ const FEATURED_COLLECTION_QUERY = `#graphql
 ` as const;
 
 const RECOMMENDED_PRODUCTS_QUERY = `#graphql
-  fragment RecommendedProduct on Product {
+  fragment MoneyProductItem on MoneyV2 {
+    amount
+    currencyCode
+  }
+
+  fragment ProductItem on Product {
     id
-    title
     handle
-    priceRange {
-      minVariantPrice {
-        amount
-        currencyCode
+    title
+    description
+  metafield(namespace: "custom", key: "quick_view_layout") {
+  value
+  reference {
+    ... on Metaobject {
+      fields {
+        key
+        value
       }
     }
+  }
+}
     featuredImage {
       id
-      url
       altText
+      url
       width
       height
     }
+
+    priceRange {
+      minVariantPrice {
+        ...MoneyProductItem
+      }
+      maxVariantPrice {
+        ...MoneyProductItem
+      }
+    }
+
+    variants(first: 100) {
+      nodes {
+        id
+        title
+        availableForSale
+        price {
+          ...MoneyProductItem
+        }
+        compareAtPrice {
+          ...MoneyProductItem
+        }
+        image {
+          id
+          altText
+          url
+          width
+          height
+        }
+        selectedOptions {
+          name
+          value
+        }
+      }
+    }
+    options {
+    name
+    values
   }
-  query RecommendedProducts ($country: CountryCode, $language: LanguageCode)
-    @inContext(country: $country, language: $language) {
+
+    images(first: 100) {
+      nodes {
+        id
+        altText
+        url
+        width
+        height
+      }
+    }
+  }
+
+  query RecommendedProducts(
+    $country: CountryCode
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
     products(first: 4, sortKey: UPDATED_AT, reverse: true) {
       nodes {
-        ...RecommendedProduct
+        ...ProductItem
       }
     }
   }

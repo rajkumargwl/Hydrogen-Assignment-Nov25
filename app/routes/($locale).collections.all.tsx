@@ -1,12 +1,14 @@
 import type {Route} from './+types/collections.all';
-import {useLoaderData} from 'react-router';
+import {useLoaderData, useRouteLoaderData} from 'react-router';
 import {getPaginationVariables, Image, Money} from '@shopify/hydrogen';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 import {ProductItem} from '~/components/ProductItem';
 import type {CollectionItemFragment} from 'storefrontapi.generated';
-
+import { useState } from 'react';
+import QuickViewModal from '~/components/QuickViewModal';
+import type { LoaderFunctionArgs, MetaFunction } from "@shopify/hydrogen";
 export const meta: Route.MetaFunction = () => {
-  return [{title: `Hydrogen | Products`}];
+  return [{title: `Reagal Forge | Products`}];
 };
 
 export async function loader(args: Route.LoaderArgs) {
@@ -65,19 +67,34 @@ export default function Collection() {
           />
         )}
       </PaginatedResourceSection>
+     
     </div>
   );
 }
-
-const COLLECTION_ITEM_FRAGMENT = `#graphql
-  fragment MoneyCollectionItem on MoneyV2 {
+const PRODUCT_ITEM_FRAGMENT = `#graphql
+  fragment MoneyProductItem on MoneyV2 {
     amount
     currencyCode
   }
-  fragment CollectionItem on Product {
+
+  fragment ProductItem on Product {
     id
     handle
     title
+    description
+
+    metafield(namespace: "custom", key: "quick_view_layout") {
+      value
+      reference {
+        ... on Metaobject {
+          fields {
+            key
+            value
+          }
+        }
+      }
+    }
+
     featuredImage {
       id
       altText
@@ -85,19 +102,61 @@ const COLLECTION_ITEM_FRAGMENT = `#graphql
       width
       height
     }
+
     priceRange {
       minVariantPrice {
-        ...MoneyCollectionItem
+        ...MoneyProductItem
       }
       maxVariantPrice {
-        ...MoneyCollectionItem
+        ...MoneyProductItem
+      }
+    }
+
+    variants(first: 100) {
+      nodes {
+        id
+        title
+        availableForSale
+        sku
+        price {
+          ...MoneyProductItem
+        }
+        compareAtPrice {
+          ...MoneyProductItem
+        }
+        image {
+          id
+          altText
+          url
+          width
+          height
+        }
+        selectedOptions {
+          name
+          value
+        }
+      }
+    }
+
+    options {
+      name
+      values
+    }
+
+    images(first: 100) {
+      nodes {
+        id
+        altText
+        url
+        width
+        height
       }
     }
   }
 ` as const;
 
-// NOTE: https://shopify.dev/docs/api/storefront/latest/objects/product
 const CATALOG_QUERY = `#graphql
+  ${PRODUCT_ITEM_FRAGMENT}
   query Catalog(
     $country: CountryCode
     $language: LanguageCode
@@ -106,9 +165,14 @@ const CATALOG_QUERY = `#graphql
     $startCursor: String
     $endCursor: String
   ) @inContext(country: $country, language: $language) {
-    products(first: $first, last: $last, before: $startCursor, after: $endCursor) {
+    products(
+      first: $first
+      last: $last
+      before: $startCursor
+      after: $endCursor
+    ) {
       nodes {
-        ...CollectionItem
+        ...ProductItem
       }
       pageInfo {
         hasPreviousPage
@@ -118,5 +182,4 @@ const CATALOG_QUERY = `#graphql
       }
     }
   }
-  ${COLLECTION_ITEM_FRAGMENT}
-` as const;
+`;

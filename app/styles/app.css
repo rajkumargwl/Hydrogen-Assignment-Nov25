@@ -572,3 +572,238 @@ button.reset:hover:not(:has(> *)) {
   gap: 0.75rem;
   flex-wrap: wrap;
 }
+
+
+
+.product-image-wrapper {
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.main-image-container {
+  width: 650px;
+  max-width: 800px;
+  margin: 30px auto;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  background: white;
+}
+
+.main-product-image {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  transition: transform 0.3s ease;
+  padding: 20px;
+}
+
+.main-product-image:hover {
+  transform: scale(1.02);
+}
+
+.thumbnails-container {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 0.5rem;
+}
+
+.thumbnail-wrapper {
+  padding: 3px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  background: transparent;
+  cursor: pointer;
+}
+
+.thumbnail-wrapper:hover {
+  transform: translateY(-2px);
+}
+
+.thumbnail-active {
+  background: linear-gradient(45deg, #000000, #333333);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.thumbnail-image {
+  width: 70px;
+  height: 70px;
+  border-radius: 6px;
+  object-fit: cover;
+  display: block;
+  border: 2px solid transparent;
+}
+
+.thumbnail-active .thumbnail-image {
+  border-color: white;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .product-image-wrapper {
+    gap: 1rem;
+  }
+  
+  .main-image-container {
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .thumbnails-container {
+    gap: 0.5rem;
+    padding: 0.25rem;
+  }
+  
+  .thumbnail-image {
+    width: 60px;
+    height: 60px;
+  }
+}
+
+@media (max-width: 480px) {
+  .thumbnail-image {
+    width: 50px;
+    height: 50px;
+  }
+}
+/* Ensure dynamic font sizes work properly */
+.product-item-wrapper .product-info h4 {
+  line-height: 1.2;
+}
+
+.product-item-wrapper .product-info small {
+  display: block;
+  margin-top: 4px;
+}
+
+/* Smooth transitions for hover effects */
+.product-item-wrapper {
+  transition: transform 0.2s ease;
+}
+
+.product-item-wrapper:hover {
+  transform: translateY(-2px);
+}
+
+.product-image-wrapper {
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.main-image-container {
+  width: 650px;
+  max-width: 800px;
+  margin: 30px auto;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  background: white;
+}
+
+.main-product-image {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  transition: transform 0.3s ease;
+  padding: 20px;
+}
+
+.main-product-image:hover {
+  transform: scale(1.02);
+}
+
+.thumbnails-container {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 0.5rem;
+}
+
+.thumbnail-wrapper {
+  padding: 3px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  background: transparent;
+  cursor: pointer;
+  border: 2px solid transparent;
+}
+
+.thumbnail-wrapper:hover {
+  transform: translateY(-2px);
+  border-color: #e5e5e5;
+}
+
+.thumbnail-active {
+  background: linear-gradient(45deg, #000000, #333333);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  border-color: #000000;
+}
+
+.thumbnail-image {
+  width: 70px;
+  height: 70px;
+  border-radius: 6px;
+  object-fit: cover;
+  display: block;
+}
+
+.thumbnail-active .thumbnail-image {
+  border: 2px solid white;
+}
+
+/* Color indication for better UX */
+.color-indicator {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .product-image-wrapper {
+    gap: 1rem;
+  }
+  
+  .main-image-container {
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .thumbnails-container {
+    gap: 0.5rem;
+    padding: 0.25rem;
+  }
+  
+  .thumbnail-image {
+    width: 60px;
+    height: 60px;
+  }
+}
+
+@media (max-width: 480px) {
+  .thumbnail-image {
+    width: 50px;
+    height: 50px;
+  }
+}
+
+/* Smooth transitions for image changes */
+.main-image-container {
+  transition: opacity 0.3s ease;
+}
+
+.main-image-container img {
+  transition: opacity 0.3s ease;
+}
