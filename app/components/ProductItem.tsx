@@ -92,7 +92,7 @@ export function ProductItem({
     absolute ${getButtonPositionClass()}
     px-4 py-2 text-white text-sm font-medium rounded
     opacity-100 transition-opacity duration-300
-    z-10 whitespace-nowrap
+     whitespace-nowrap
     ${quickViewConfig?.button_font_size ? `text-[${quickViewConfig.button_font_size}px]` : 'text-sm'}
   `}
   style={{
