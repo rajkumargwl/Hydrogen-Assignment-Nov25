@@ -99,9 +99,6 @@ function RecommendedProducts({
 }: {
   products: Promise<RecommendedProductsQuery | null>;
 }) {
- 
-
-  // Get Quick View Global Config from root loader
   return (
     <div className="recommended-products">
       <h2>Recommended Products</h2>

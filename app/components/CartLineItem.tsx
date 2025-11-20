@@ -27,7 +27,7 @@ export function CartLineItem({
   const {close} = useAside();
   const variantImage =
     attributes?.find((a) => a.key === "variant_image")?.value || image?.url;
-    console.log("Cart line attributes:", JSON.stringify(line.attributes ,null,2) );
+    
 
   return (
     <li key={id} className="cart-line">

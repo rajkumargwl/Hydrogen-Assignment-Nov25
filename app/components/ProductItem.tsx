@@ -44,7 +44,7 @@ export function ProductItem({
        onQuickView?.(product);
     }
   };
-  // Determine if quick view should be visible
+  
   const shouldShowQuickView = showQuickView && quickViewConfig?.quick_view_enabled === "true";
     const getButtonPositionClass = () => {
     const position = quickViewConfig?.quick_view_position || 'bottom_center_image';
@@ -73,9 +73,9 @@ export function ProductItem({
       >
         {image && (
           <Image
-            alt={image.altText || product.title}
+            alt={image?.altText || product?.title}
             aspectRatio="1/1"
-            data={image}
+            data={image || {}}
             loading={loading}
             sizes="(min-width: 45em) 400px, 100vw"
           />
@@ -105,7 +105,6 @@ export function ProductItem({
 
 
           )}
-          {/* ✔ Only renders when enabled */}
       {quickViewConfig?.quick_view_enabled === "true" && (
         <QuickViewModal
           product={product}

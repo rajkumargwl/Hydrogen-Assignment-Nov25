@@ -20,7 +20,6 @@ export function ProductForm({
   return (
     <div className="product-form">
       {productOptions.map((option) => {
-        // If there is only a single value in the option values, don't display the option
         if (option.optionValues.length === 1) return null;
 
         return (
@@ -120,13 +119,8 @@ export function ProductForm({
                 {
                   merchandiseId: selectedVariant.id,
                   quantity: 1,
-                  // selectedVariant,
-                  attributes: [
-              {
-                key: "variant_image",
-                value: selectedVariant?.image?.url || ""
-              }
-            ]
+                   selectedVariant,
+           
                 },
               ]
             : []

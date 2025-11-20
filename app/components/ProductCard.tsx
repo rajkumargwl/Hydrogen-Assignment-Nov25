@@ -1,8 +1,6 @@
-import React from "react";
-// import type { ProductFragment } from "~/types/shopify"; // You will create this later if needed
 
 interface ProductCardProps {
-  product: any; // For now keep as any, we can type it later
+  product: any; 
   showQuickView?: boolean;
   onQuickView?: (product: any) => void;
 }
@@ -17,7 +15,7 @@ export default function ProductCard({
 
   return (
     <div className="group relative border rounded-xl p-3 shadow-sm hover:shadow-md transition">
-      {/* Product Image */}
+ 
       <div className="aspect-square overflow-hidden rounded-lg bg-gray-100">
         {image ? (
           <img
@@ -32,16 +30,12 @@ export default function ProductCard({
         )}
       </div>
 
-      {/* Title */} 
+   
       <h3 className="mt-3 text-base font-medium">{title}</h3>
-
-      {/* Price */}
       <p className="text-sm text-gray-600">
         {product?.priceRange?.minVariantPrice?.amount}{" "}
         {product?.priceRange?.minVariantPrice?.currencyCode}
       </p>
-
-      {/* Quick View Button */}
       {showQuickView && (
         <button
           onClick={() => onQuickView?.(product)}

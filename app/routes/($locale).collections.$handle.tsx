@@ -1,5 +1,5 @@
 import {redirect, useLoaderData, useRouteLoaderData} from 'react-router';
-// import type {Route} from './+types/collections.$handle';
+import type {Route} from './+types/collections.$handle';
 import {getPaginationVariables, Analytics} from '@shopify/hydrogen';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
@@ -7,13 +7,10 @@ import {ProductItem} from '~/components/ProductItem';
 import type {ProductItemFragment} from 'storefrontapi.generated';
 
 import { useState } from 'react';
-import QuickViewModal from '~/components/QuickViewModal';
-import type { LoaderFunctionArgs, MetaFunction } from "@shopify/hydrogen";
+import type { LoaderFunctionArgs } from "@shopify/hydrogen";
 
-
-export const meta: MetaFunction = ({ data }) => {
-
-  return [{title: `Reagal Forge | Collections`}];
+export const meta: Route.MetaFunction = () => {
+  return [{title: 'Collections | Regal Forge'}];
 };
 
 export async function loader(args: LoaderFunctionArgs) {
@@ -78,10 +75,10 @@ export default function Collection() {
 
   return (
     <div className="collection">
-      <h1>{collection.title}</h1>
-      <p className="collection-description">{collection.description}</p>
+      <h1>{collection?.title}</h1>
+      <p className="collection-description">{collection?.description}</p>
       <PaginatedResourceSection<ProductItemFragment>
-        connection={collection.products}
+        connection={collection?.products}
         resourcesClassName="products-grid"
       >
         {({node: product, index}) => (
@@ -98,8 +95,8 @@ export default function Collection() {
       <Analytics.CollectionView
         data={{
           collection: {
-            id: collection.id,
-            handle: collection.handle,
+            id: collection?.id,
+            handle: collection?.handle,
           },
         }}
       />

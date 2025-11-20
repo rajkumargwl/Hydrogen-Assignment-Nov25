@@ -35,20 +35,18 @@ export default function QuickViewModal({
   const thumbsSwiperRef = useRef(null);
   const navigate = useNavigate();
   
-  // Use settings from props (your Quick View data)
+
   const meta = settings || {};
   
-  // Use metafield layout order if available, otherwise use default
+
   const layoutOrder = meta.layout_order ? 
     meta.layout_order.split('\n').filter(item => item.trim() !== '') : 
     elementOrder;
   
-  // Use metafield font sizes if available, otherwise use default typography
+
   const getTypographyClass = (element) => {
     const fontSize = meta[`${element}_font_size`];
     if (!fontSize) return typography[element] || '';
-    
-    // Convert metafield font size (numeric values like '12', '15', '19') to Tailwind classes
     const sizeMap = {
       '10': 'text-xs',
       '12': 'text-sm',
@@ -63,8 +61,6 @@ export default function QuickViewModal({
     };
     
     const sizeClass = sizeMap[fontSize] || 'text-base';
-    
-    // Add font weights based on element type
     const weightClass = element === 'title' ? 'font-semibold' : 
                        element === 'price' ? 'font-medium' : 
                        element === 'button' ? 'font-medium' : 'font-normal';
@@ -72,7 +68,7 @@ export default function QuickViewModal({
     return `${sizeClass} ${weightClass}`;
   };
 
-  // Apply spacing from settings
+ 
   const getSpacingClass = () => {
     const spacing = meta.spacing || '12';
     const spacingMap = {
@@ -85,7 +81,6 @@ export default function QuickViewModal({
     return spacingMap[spacing] || 'gap-3';
   };
 
-  // Apply theme from settings
   const getThemeClasses = () => {
     const theme = meta.theme || 'light';
     if (theme === 'dark') {
@@ -107,11 +102,11 @@ export default function QuickViewModal({
   const themeClasses = getThemeClasses();
   const spacingClass = getSpacingClass();
 
-  // Safely get images and variants
+
   const images = product?.images?.nodes || [];
   const variants = product?.variants?.nodes || [];
   
-  // If no variants from API, create a default one
+  
   const displayVariants = variants.length > 0 ? variants : [{
     id: product.id,
     title: 'Default',
@@ -121,27 +116,25 @@ export default function QuickViewModal({
     selectedOptions: [],
   }];
 
-  // Use featured image if no images array
   const displayImages = images.length > 0 ? images : 
-    product.featuredImage ? [product.featuredImage] : [];
+    product?.featuredImage ? [product?.featuredImage] : [];
 
-  // Get selected color from selected options
+ 
   const selectedColor = selectedOptions?.Color?.toLowerCase();
 
-  // Filter images based on selected color alt text
   const filteredImages = useMemo(() => {
     if (!selectedColor) return displayImages;
 
-    const colorImages = displayImages.filter((img) => {
+    const colorImages = displayImages?.filter((img) => {
       const alt = img?.altText?.toLowerCase() || "";
       return alt.includes(selectedColor);
     });
 
-    // If no color-specific images found, return all images
-    return colorImages.length > 0 ? colorImages : displayImages;
+   
+    return colorImages?.length > 0 ? colorImages : displayImages;
   }, [displayImages, selectedColor]);
 
-  // Reset active image index when color changes
+
   useEffect(() => {
     setActiveImageIndex(0);
     if (mainSwiperRef.current && !mainSwiperRef.current.destroyed) {
@@ -149,25 +142,25 @@ export default function QuickViewModal({
     }
   }, [selectedColor]);
 
-  // Function to find image index by color
+
   const findImageIndexByColor = (colorValue, imagesArray = displayImages) => {
     if (!imagesArray || imagesArray.length === 0) return -1;
     
-    const color = colorValue.toLowerCase();
+    const color = colorValue?.toLowerCase();
     
-    // Try to find image with exact alt text match
+  
     let matchingImageIndex = imagesArray.findIndex(img => 
       img.altText && img.altText.toLowerCase() === color
     );
     
-    // If no exact match, try partial matching
+    
     if (matchingImageIndex === -1) {
       matchingImageIndex = imagesArray.findIndex(img => 
         img.altText && img.altText.toLowerCase().includes(color)
       );
     }
     
-    // If still no match, try to find by color name in URL (fallback)
+ 
     if (matchingImageIndex === -1) {
       matchingImageIndex = imagesArray.findIndex(img => 
         img.url && img.url.toLowerCase().includes(color)
@@ -177,7 +170,7 @@ export default function QuickViewModal({
     return matchingImageIndex;
   };
 
-  // Close on ESC key
+
   useEffect(() => {
     const handleEsc = (e) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', handleEsc);
@@ -216,7 +209,7 @@ export default function QuickViewModal({
   // Reset active image index and swiper state when product changes or modal opens
   useEffect(() => {
     if (isOpen && product) {
-      // Small delay to ensure DOM is ready for Swiper
+  
       const timer = setTimeout(() => {
         setIsSwiperReady(true);
       }, 100);
@@ -255,9 +248,9 @@ export default function QuickViewModal({
 
     const availableValues = new Set();
     availableVariants.forEach(variant => {
-      const option = variant.selectedOptions?.find(opt => opt.name === optionName);
+      const option = variant?.selectedOptions?.find(opt => opt?.name === optionName);
       if (option) {
-        availableValues.add(option.value);
+        availableValues.add(option?.value);
       }
     });
 
@@ -356,10 +349,10 @@ export default function QuickViewModal({
       onClick={onClose}
     >
       <div
-        className={`${themeClasses.background} rounded-lg p-6 max-w-4xl w-full relative overflow-auto max-h-[90vh] ${spacingClass}`}
+        className={`${themeClasses?.background} rounded-lg p-6 max-w-4xl w-full relative overflow-auto max-h-[90vh] ${spacingClass}`}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close Button */}
+     
         <button
           className={`absolute right-4 top-4 text-xl font-bold z-10 ${themeClasses.button} rounded-full w-8 h-8 flex items-center justify-center hover:opacity-80 border ${themeClasses.border} transition-opacity`}
           onClick={onClose}
@@ -368,16 +361,11 @@ export default function QuickViewModal({
         </button>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Product Images Section with Enhanced Slider */}
           <div>
             {layoutOrder.includes('image') && (
               <div className="mb-4">
                 {filteredImages.length > 0 ? (
                   <div className="space-y-4">
-                
-              
-
-                    {/* Main Image Slider */}
                     <div className="relative">
                       {isSwiperReady && (
                         <Swiper
@@ -392,12 +380,12 @@ export default function QuickViewModal({
                           initialSlide={activeImageIndex}
                           className="rounded-lg overflow-hidden main-swiper"
                         >
-                          {filteredImages.map((img, index) => (
-                            <SwiperSlide key={img.id || index}>
+                          {filteredImages?.map((img, index) => (
+                            <SwiperSlide key={img?.id || index}>
                               <div className="swiper-zoom-container">
                                 <Image 
                                   data={img} 
-                                  alt={product.title}
+                                  alt={product?.title}
                                   className="w-full h-80 md:h-96 object-cover cursor-zoom-in"
                                   widths={[400, 600, 800]}
                                   sizes="(max-width: 768px) 100vw, 50vw"
@@ -406,8 +394,8 @@ export default function QuickViewModal({
                             </SwiperSlide>
                           ))}
                           
-                          {/* Custom Navigation Arrows - Only show if more than 1 image */}
-                          {filteredImages.length > 1 && (
+                
+                          {filteredImages?.length > 1 && (
                             <>
                               <button 
                                 className="swiper-button-custom-next absolute right-2 top-1/2 transform -translate-y-1/2 z-10 w-10 h-10 bg-white/80 rounded-full shadow-lg flex items-center justify-center hover:bg-white transition-colors"
@@ -423,36 +411,34 @@ export default function QuickViewModal({
                               </button>
                             </>
                           )}
-                          
-                          {/* Image Counter - Only show if more than 1 image */}
-                          {filteredImages.length > 1 && (
+                          {filteredImages?.length > 1 && (
                             <div className="absolute top-4 right-4 z-10 bg-black/60 text-white px-2 py-1 rounded text-sm">
-                              {activeImageIndex + 1} / {filteredImages.length}
+                              {activeImageIndex + 1} / {filteredImages?.length}
                             </div>
                           )}
                         </Swiper>
                       )}
                     </div>
 
-                    {/* Thumbnail Slider - Only show if more than 1 image */}
+                    {/* Thumbnail Slider */}
                     {filteredImages.length > 1 && isSwiperReady && (
                       <div className="px-8 relative">
                         <Swiper
                           modules={[Navigation, Thumbs]}
                           spaceBetween={8}
-                          slidesPerView={Math.min(4, filteredImages.length)}
+                          slidesPerView={Math.min(4, filteredImages?.length)}
                           watchSlidesProgress={true}
                           onSwiper={handleThumbsSwiperInit}
                           navigation={false}
                           breakpoints={{
                             320: {
-                              slidesPerView: Math.min(3, filteredImages.length),
+                              slidesPerView: Math.min(3, filteredImages?.length),
                             },
                             640: {
-                              slidesPerView: Math.min(4, filteredImages.length),
+                              slidesPerView: Math.min(4, filteredImages?.length),
                             },
                             768: {
-                              slidesPerView: Math.min(5, filteredImages.length),
+                              slidesPerView: Math.min(5, filteredImages?.length),
                             },
                           }}
                           className="thumbs-swiper"
@@ -467,7 +453,7 @@ export default function QuickViewModal({
                                 }`}
                                 onClick={() => {
                                   setActiveImageIndex(index);
-                                  if (mainSwiperRef.current && !mainSwiperRef.current.destroyed) {
+                                  if (mainSwiperRef?.current && !mainSwiperRef?.current.destroyed) {
                                     mainSwiperRef.current.slideTo(index);
                                   }
                                 }}
@@ -484,7 +470,7 @@ export default function QuickViewModal({
                           ))}
                           
                           {/* Thumbnail Navigation - Only show if more than 4 thumbnails */}
-                          {filteredImages.length > 4 && (
+                          {filteredImages?.length > 4 && (
                             <>
                               <button 
                                 className="thumbs-button-prev absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-white/90 rounded-r shadow-lg w-6 h-8 flex items-center justify-center cursor-pointer hover:bg-white"
@@ -513,10 +499,8 @@ export default function QuickViewModal({
             )}
           </div>
 
-          {/* Product Details Section */}
           <div className="flex flex-col">
-            {/* Render elements in dynamic order from settings */}
-            {layoutOrder.map((element) => {
+            {layoutOrder?.map((element) => {
               switch (element) {
                 case 'image':
                   return null;
@@ -525,7 +509,7 @@ export default function QuickViewModal({
                   return (
                     <h2
                       key="title"
-                      className={`${getTypographyClass('title')} ${themeClasses.text} mb-3`}
+                      className={`${getTypographyClass('title')} ${themeClasses?.text} mb-3`}
                     >
                       {product.title}
                     </h2>
@@ -603,8 +587,6 @@ export default function QuickViewModal({
                               </div>
                             </div>
                           ))}
-                          
-                          {/* Show selected variant info */}
                           {selectedVariant && (
                             <div className={`mt-3 p-3 ${themeClasses.background === 'bg-white' ? 'bg-gray-50' : 'bg-gray-800'} rounded-lg`}>
                               <div className="text-sm">
@@ -619,29 +601,29 @@ export default function QuickViewModal({
                       ) : (
                         /* Simple variant picker for single option or no options */
                         <div className="flex flex-wrap gap-2">
-                          {displayVariants.map((variant) => (
+                          {displayVariants?.map((variant) => (
                             <button
-                              key={variant.id}
+                              key={variant?.id}
                               onClick={() => {
                                 setSelectedVariant(variant);
                                 
                                 // Update selected options
                                 const newOptions = {};
-                                if (variant.selectedOptions) {
-                                  variant.selectedOptions.forEach(opt => {
-                                    newOptions[opt.name] = opt.value;
+                                if (variant?.selectedOptions) {
+                                  variant?.selectedOptions.forEach(opt => {
+                                    newOptions[opt.name] = opt?.value;
                                   });
                                 }
                                 setSelectedOptions(newOptions);
                               }}
                               className={`px-4 py-2 border rounded-lg transition-colors ${
-                                selectedVariant?.id === variant.id
+                                selectedVariant?.id === variant?.id
                                   ? 'bg-black text-white border-black'
                                   : `${themeClasses.border} bg-white text-gray-700 hover:border-gray-400`
                               } ${!variant.availableForSale ? 'opacity-50 cursor-not-allowed' : ''}`}
                               disabled={!variant.availableForSale}
                             >
-                              {variant.title === 'Default Title' ? 'Default' : variant.title}
+                              {variant?.title === 'Default Title' ? 'Default' : variant?.title}
                               {!variant.availableForSale && ' (Sold Out)'}
                             </button>
                           ))}
@@ -654,9 +636,9 @@ export default function QuickViewModal({
                   return (
                     <div key="add_to_cart" className="mt-auto">
                       <AddToCartButton
-                        disabled={!selectedVariant || !selectedVariant.availableForSale}
+                        disabled={!selectedVariant || !selectedVariant?.availableForSale}
                         onClick={() => {
-                          console.log("Added to cart:", selectedVariant);
+                         
                           setTimeout(() => {
                             onClose();
                             navigate("/cart"); 
@@ -666,7 +648,7 @@ export default function QuickViewModal({
                           selectedVariant
                             ? [
                                 {
-                                  merchandiseId: selectedVariant.id,
+                                  merchandiseId: selectedVariant?.id,
                                   quantity: 1,
                                 },
                               ]
@@ -675,9 +657,9 @@ export default function QuickViewModal({
                         analytics={{
                           products: [
                             {
-                              productGid: product.id,
+                              productGid: product?.id,
                               variantGid: selectedVariant?.id,
-                              name: product.title,
+                              name: product?.title,
                               variant: selectedVariant?.title,
                               price: selectedVariant?.price?.amount,
                               quantity: 1,
@@ -685,10 +667,10 @@ export default function QuickViewModal({
                           ],
                         }}
                       >
-                        <span className={`px-6 py-3 ${themeClasses.button} rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed block w-full text-center ${getTypographyClass('button')}`}>
+                        <span className={`px-6 py-3 ${themeClasses?.button} rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed block w-full text-center ${getTypographyClass('button')}`}>
                           {!selectedVariant
                             ? "Select Option"
-                            : selectedVariant.availableForSale
+                            : selectedVariant?.availableForSale
                             ? "Add to Cart"
                             : "Sold Out"}
                         </span>
