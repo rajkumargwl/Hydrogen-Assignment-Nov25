@@ -81,6 +81,12 @@ const COLLECTION_ITEM_FRAGMENT = `#graphql
     amount
     currencyCode
   }
+  fragment CustomPriceMetafield on Metafield {
+    namespace
+    key
+    value
+    type
+  }
   fragment CollectionItem on Product {
     id
     handle
@@ -99,6 +105,13 @@ const COLLECTION_ITEM_FRAGMENT = `#graphql
       maxVariantPrice {
         ...MoneyCollectionItem
       }
+    }
+    metafields(identifiers: [
+      {namespace: "custom", key: "price"},
+      {namespace: "custom", key: "discount_percentage"},
+      {namespace: "custom", key: "discount_fixed_amount"}
+    ]) {
+      ...CustomPriceMetafield
     }
   }
 `;

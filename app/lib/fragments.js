@@ -47,6 +47,26 @@ export const CART_QUERY_FRAGMENT = `#graphql
           title
           id
           vendor
+          metafields(identifiers: [
+            {namespace: "custom", key: "price"},
+            {namespace: "custom", key: "discount_percentage"},
+            {namespace: "custom", key: "discount_fixed_amount"}
+          ]) {
+            namespace
+            key
+            value
+            type
+          }
+        }
+        metafields(identifiers: [
+          {namespace: "custom", key: "price"},
+          {namespace: "custom", key: "discount_percentage"},
+          {namespace: "custom", key: "discount_fixed_amount"}
+        ]) {
+          namespace
+          key
+          value
+          type
         }
         selectedOptions {
           name
@@ -97,6 +117,26 @@ export const CART_QUERY_FRAGMENT = `#graphql
           title
           id
           vendor
+          metafields(identifiers: [
+            {namespace: "custom", key: "price"},
+            {namespace: "custom", key: "discount_percentage"},
+            {namespace: "custom", key: "discount_fixed_amount"}
+          ]) {
+            namespace
+            key
+            value
+            type
+          }
+        }
+        metafields(identifiers: [
+          {namespace: "custom", key: "price"},
+          {namespace: "custom", key: "discount_percentage"},
+          {namespace: "custom", key: "discount_fixed_amount"}
+        ]) {
+          namespace
+          key
+          value
+          type
         }
         selectedOptions {
           name

@@ -113,11 +113,15 @@ export default function Product() {
         <ProductPrice
           price={selectedVariant?.price}
           compareAtPrice={selectedVariant?.compareAtPrice}
+          product={product}
+          variant={selectedVariant}
+          showDiscountInfo={true}
         />
         <br />
         <ProductForm
           productOptions={productOptions}
           selectedVariant={selectedVariant}
+          product={product}
         />
         <br />
         <br />
@@ -181,6 +185,16 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
       amount
       currencyCode
     }
+    metafields(identifiers: [
+      {namespace: "custom", key: "price"},
+      {namespace: "custom", key: "discount_percentage"},
+      {namespace: "custom", key: "discount_fixed_amount"}
+    ]) {
+      namespace
+      key
+      value
+      type
+    }
   }
 `;
 
@@ -220,6 +234,16 @@ const PRODUCT_FRAGMENT = `#graphql
     seo {
       description
       title
+    }
+    metafields(identifiers: [
+      {namespace: "custom", key: "price"},
+      {namespace: "custom", key: "discount_percentage"},
+      {namespace: "custom", key: "discount_fixed_amount"}
+    ]) {
+      namespace
+      key
+      value
+      type
     }
   }
   ${PRODUCT_VARIANT_FRAGMENT}

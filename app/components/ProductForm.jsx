@@ -1,16 +1,53 @@
 import {Link, useNavigate} from 'react-router';
 import {AddToCartButton} from './AddToCartButton';
 import {useAside} from './Aside';
+import {
+  getVariantCustomPrice,
+  getCustomPriceMetafields,
+} from '~/lib/customPricing';
+import {getCartLineAttributes} from '~/lib/cartPricing';
 
 /**
  * @param {{
  *   productOptions: MappedProductOptions[];
  *   selectedVariant: ProductFragment['selectedOrFirstAvailableVariant'];
+ *   product?: ProductFragment;
  * }}
  */
-export function ProductForm({productOptions, selectedVariant}) {
+export function ProductForm({productOptions, selectedVariant, product}) {
   const navigate = useNavigate();
   const {open} = useAside();
+
+  // Get custom pricing for the selected variant
+  let cartLines = [];
+  if (selectedVariant) {
+    const customPrice = getVariantCustomPrice(
+      selectedVariant,
+      product,
+      selectedVariant?.price?.currencyCode || 'USD',
+    );
+
+    const lineInput = {
+      merchandiseId: selectedVariant.id,
+      quantity: 1,
+    };
+
+    // Add custom pricing attributes if available
+    if (customPrice) {
+      const attributes = getCartLineAttributes(
+        selectedVariant,
+        product,
+        customPrice,
+      );
+      lineInput.attributes = Object.entries(attributes).map(([key, value]) => ({
+        key,
+        value: String(value),
+      }));
+    }
+
+    cartLines = [lineInput];
+  }
+
   return (
     <div className="product-form">
       {productOptions.map((option) => {
@@ -100,17 +137,7 @@ export function ProductForm({productOptions, selectedVariant}) {
         onClick={() => {
           open('cart');
         }}
-        lines={
-          selectedVariant
-            ? [
-                {
-                  merchandiseId: selectedVariant.id,
-                  quantity: 1,
-                  selectedVariant,
-                },
-              ]
-            : []
-        }
+        lines={cartLines}
       >
         {selectedVariant?.availableForSale ? 'Add to cart' : 'Sold out'}
       </AddToCartButton>

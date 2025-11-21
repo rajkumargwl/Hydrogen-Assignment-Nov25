@@ -1,6 +1,7 @@
 import {CartForm, Money} from '@shopify/hydrogen';
 import {useEffect, useRef} from 'react';
 import {useFetcher} from 'react-router';
+import {calculateCartTotalsWithCustomPricing} from '~/lib/cartPricing';
 
 /**
  * @param {CartSummaryProps}
@@ -9,14 +10,19 @@ export function CartSummary({cart, layout}) {
   const className =
     layout === 'page' ? 'cart-summary-page' : 'cart-summary-aside';
 
+  // Calculate custom pricing subtotal
+  // If custom pricing is found, use it; otherwise fall back to Shopify's calculation
+  const customTotals = calculateCartTotalsWithCustomPricing(cart);
+  const subtotalAmount = customTotals?.subtotal || cart?.cost?.subtotalAmount;
+
   return (
     <div aria-labelledby="cart-summary" className={className}>
       <h4>Totals</h4>
       <dl className="cart-subtotal">
         <dt>Subtotal</dt>
         <dd>
-          {cart?.cost?.subtotalAmount?.amount ? (
-            <Money data={cart?.cost?.subtotalAmount} />
+          {subtotalAmount?.amount ? (
+            <Money data={subtotalAmount} />
           ) : (
             '-'
           )}
@@ -24,24 +30,38 @@ export function CartSummary({cart, layout}) {
       </dl>
       <CartDiscounts discountCodes={cart?.discountCodes} />
       <CartGiftCard giftCardCodes={cart?.appliedGiftCards} />
-      <CartCheckoutActions checkoutUrl={cart?.checkoutUrl} />
+      <CartCheckoutActions checkoutUrl={cart?.checkoutUrl} cart={cart} />
     </div>
   );
 }
 
 /**
- * @param {{checkoutUrl?: string}}
+ * @param {{checkoutUrl?: string; cart?: any}}
  */
-function CartCheckoutActions({checkoutUrl}) {
-  if (!checkoutUrl) return null;
+function CartCheckoutActions({checkoutUrl, cart}) {
+  if (!checkoutUrl || !cart?.id) return null;
 
+  // Always use draft orders to ensure custom pricing works correctly
+  // This avoids the /private_access_tokens 401 error from regular checkout
   return (
-    <div>
-      <a href={checkoutUrl} target="_self">
+    <form action="/api/checkout/create-draft-order" method="POST">
+      <input type="hidden" name="cartId" value={cart.id} />
+      <button 
+        type="submit" 
+        style={{
+          background: 'none', 
+          border: 'none', 
+          cursor: 'pointer', 
+          padding: 0,
+          textAlign: 'left',
+          width: '100%',
+          font: 'inherit',
+          color: 'inherit'
+        }}
+      >
         <p>Continue to Checkout &rarr;</p>
-      </a>
-      <br />
-    </div>
+      </button>
+    </form>
   );
 }
 

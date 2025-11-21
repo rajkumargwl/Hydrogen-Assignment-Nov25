@@ -142,7 +142,7 @@ const FEATURED_COLLECTION_QUERY = `#graphql
     }
   }
 `;
-
+//this is query for fetecing products with custom metafields
 const RECOMMENDED_PRODUCTS_QUERY = `#graphql
   fragment RecommendedProduct on Product {
     id
@@ -160,6 +160,16 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
       altText
       width
       height
+    }
+    metafields(identifiers: [
+      {namespace: "custom", key: "price"},
+      {namespace: "custom", key: "discount_percentage"},
+      {namespace: "custom", key: "discount_fixed_amount"}
+    ]) {
+      namespace
+      key
+      value
+      type
     }
   }
   query RecommendedProducts ($country: CountryCode, $language: LanguageCode)

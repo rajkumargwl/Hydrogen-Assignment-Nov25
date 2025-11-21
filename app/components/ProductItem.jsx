@@ -1,6 +1,14 @@
 import {Link} from 'react-router';
-import {Image, Money} from '@shopify/hydrogen';
+import {Image} from '@shopify/hydrogen';
 import {useVariantUrl} from '~/lib/variants';
+import {ProductPrice} from './ProductPrice';
+import {
+  getProductMinCustomPrice,
+  getCustomPriceMetafields,
+  calculateCustomPrice,
+  formatAsMoneyV2,
+  formatOriginalAsMoneyV2,
+} from '~/lib/customPricing';
 
 /**
  * @param {{
@@ -12,8 +20,26 @@ import {useVariantUrl} from '~/lib/variants';
  * }}
  */
 export function ProductItem({product, loading}) {
+  console.log("products....................",product);
   const variantUrl = useVariantUrl(product.handle);
   const image = product.featuredImage;
+
+  // Get custom pricing
+  const metafields = getCustomPriceMetafields(product);
+  const customPrice = calculateCustomPrice(
+    metafields,
+    product.priceRange?.minVariantPrice?.currencyCode || 'USD',
+  );
+
+  // Determine price to display
+  let price = product.priceRange?.minVariantPrice;
+  let compareAtPrice = null;
+
+  if (customPrice) {
+    price = formatAsMoneyV2(customPrice);
+    compareAtPrice = formatOriginalAsMoneyV2(customPrice);
+  }
+
   return (
     <Link
       className="product-item"
@@ -31,9 +57,12 @@ export function ProductItem({product, loading}) {
         />
       )}
       <h4>{product.title}</h4>
-      <small>
-        <Money data={product.priceRange.minVariantPrice} />
-      </small>
+      <ProductPrice
+        price={price}
+        compareAtPrice={compareAtPrice}
+        product={product}
+        showDiscountInfo={true}
+      />
     </Link>
   );
 }

@@ -3,6 +3,12 @@ import {useVariantUrl} from '~/lib/variants';
 import {Link} from 'react-router';
 import {ProductPrice} from './ProductPrice';
 import {useAside} from './Aside';
+import {
+  getVariantCustomPrice,
+  formatAsMoneyV2,
+  formatOriginalAsMoneyV2,
+} from '~/lib/customPricing';
+import {getCustomPriceFromCartLine} from '~/lib/cartPricing';
 
 /**
  * A single line item in the cart. It displays the product image, title, price.
@@ -17,6 +23,51 @@ export function CartLineItem({layout, line}) {
   const {product, title, image, selectedOptions} = merchandise;
   const lineItemUrl = useVariantUrl(product.handle, selectedOptions);
   const {close} = useAside();
+
+  // First check cart line attributes (where custom pricing is stored when added to cart)
+  let customPrice = getCustomPriceFromCartLine(line);
+  
+  // If not in attributes, try to get from metafields
+  if (!customPrice) {
+    const variantPrice = getVariantCustomPrice(
+      merchandise,
+      product,
+      line?.cost?.totalAmount?.currencyCode || 'USD',
+    );
+    if (variantPrice) {
+      customPrice = {
+        originalPrice: variantPrice.originalPrice,
+        finalPrice: variantPrice.finalPrice,
+        discountType: variantPrice.discountType,
+        discountValue: variantPrice.discountValue,
+        discountAmount: variantPrice.discountAmount,
+        currencyCode: variantPrice.currencyCode,
+      };
+    }
+  }
+
+  // Calculate line item price
+  let displayPrice = line?.cost?.totalAmount;
+  let compareAtPrice = null;
+
+  if (customPrice && line?.quantity) {
+    // Calculate total for the line (price per unit * quantity)
+    const unitPrice = parseFloat(customPrice.finalPrice);
+    const totalPrice = unitPrice * parseInt(line.quantity, 10);
+    const originalTotal = parseFloat(customPrice.originalPrice) * parseInt(line.quantity, 10);
+
+    displayPrice = {
+      amount: totalPrice.toFixed(2),
+      currencyCode: customPrice.currencyCode,
+    };
+
+    if (customPrice.discountType) {
+      compareAtPrice = {
+        amount: originalTotal.toFixed(2),
+        currencyCode: customPrice.currencyCode,
+      };
+    }
+  }
 
   return (
     <li key={id} className="cart-line">
@@ -45,7 +96,13 @@ export function CartLineItem({layout, line}) {
             <strong>{product.title}</strong>
           </p>
         </Link>
-        <ProductPrice price={line?.cost?.totalAmount} />
+        <ProductPrice
+          price={displayPrice}
+          compareAtPrice={compareAtPrice}
+          product={product}
+          variant={merchandise}
+          showDiscountInfo={true}
+        />
         <ul>
           {selectedOptions.map((option) => (
             <li key={option.name}>
