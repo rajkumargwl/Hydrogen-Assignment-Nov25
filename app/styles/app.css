@@ -700,7 +700,7 @@ button.reset:hover:not(:has(> *)) {
 }
  
 .main-image-container {
-  max-width: 800px;
+  max-width: 650px;
   margin: 30px auto;
   border-radius: 12px;
   overflow: hidden;
@@ -761,7 +761,7 @@ button.reset:hover:not(:has(> *)) {
   border: 2px solid white;
 }
  
-/* Color indication for better UX */
+
 .color-indicator {
   display: inline-block;
   width: 12px;
@@ -770,8 +770,7 @@ button.reset:hover:not(:has(> *)) {
   margin-right: 8px;
   vertical-align: middle;
 }
- 
-/* Responsive adjustments */
+
 @media (max-width: 768px) {
   .product-image-wrapper {
     gap: 1rem;

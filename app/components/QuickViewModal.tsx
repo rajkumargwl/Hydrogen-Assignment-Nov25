@@ -143,33 +143,6 @@ export default function QuickViewModal({
   }, [selectedColor]);
 
 
-  const findImageIndexByColor = (colorValue, imagesArray = displayImages) => {
-    if (!imagesArray || imagesArray.length === 0) return -1;
-    
-    const color = colorValue?.toLowerCase();
-    
-  
-    let matchingImageIndex = imagesArray.findIndex(img => 
-      img.altText && img.altText.toLowerCase() === color
-    );
-    
-    
-    if (matchingImageIndex === -1) {
-      matchingImageIndex = imagesArray.findIndex(img => 
-        img.altText && img.altText.toLowerCase().includes(color)
-      );
-    }
-    
- 
-    if (matchingImageIndex === -1) {
-      matchingImageIndex = imagesArray.findIndex(img => 
-        img.url && img.url.toLowerCase().includes(color)
-      );
-    }
-    
-    return matchingImageIndex;
-  };
-
 
   useEffect(() => {
     const handleEsc = (e) => e.key === 'Escape' && onClose();
@@ -240,7 +213,7 @@ export default function QuickViewModal({
     
     const availableVariants = product.variants.nodes.filter(variant => {
       return Object.entries(selectedOptions).every(([name, value]) => {
-        if (name === optionName) return true; // Skip the current option we're checking
+        if (name === optionName) return true; 
         const option = variant.selectedOptions?.find(opt => opt.name === name);
         return option && option.value === value;
       });
@@ -337,7 +310,6 @@ export default function QuickViewModal({
     }
   };
 
-  // Check if we should show the advanced variant picker (multiple options)
   const productOptions = getProductOptions();
   const shouldShowAdvancedVariantPicker = productOptions.length > 1;
 
@@ -420,7 +392,7 @@ export default function QuickViewModal({
                       )}
                     </div>
 
-                    {/* Thumbnail Slider */}
+                
                     {filteredImages.length > 1 && isSwiperReady && (
                       <div className="px-8 relative">
                         <Swiper
@@ -469,7 +441,7 @@ export default function QuickViewModal({
                             </SwiperSlide>
                           ))}
                           
-                          {/* Thumbnail Navigation - Only show if more than 4 thumbnails */}
+                      
                           {filteredImages?.length > 4 && (
                             <>
                               <button 
@@ -517,11 +489,11 @@ export default function QuickViewModal({
 
                 case 'price':
                   return (
-                    <div key="price" className={`${getTypographyClass('price')} ${themeClasses.text} mb-4`}>
+                    <div key="price" className={`${getTypographyClass('price')} ${themeClasses?.text} mb-4`}>
                       {selectedVariant ? (
                         <ProductPrice 
-                          price={selectedVariant.price} 
-                          compareAtPrice={selectedVariant.compareAtPrice} 
+                          price={selectedVariant?.price} 
+                          compareAtPrice={selectedVariant?.compareAtPrice} 
                         />
                       ) : (
                         <Money data={product.priceRange?.minVariantPrice} />
@@ -532,7 +504,7 @@ export default function QuickViewModal({
                 case 'description':
                   return (
                     <div key="description" className="mb-4">
-                      <p className={`${getTypographyClass('description')} ${themeClasses.text} opacity-80`}>
+                      <p className={`${getTypographyClass('description')} ${themeClasses?.text} opacity-80`}>
                         {product.description || 'No description available.'}
                       </p>
                     </div>
@@ -545,15 +517,15 @@ export default function QuickViewModal({
                         {shouldShowAdvancedVariantPicker ? 'Select Options' : 'Select Option'}
                       </h3>
                       
-                      {/* Advanced Variant Picker for multiple options */}
+                
                       {shouldShowAdvancedVariantPicker ? (
                         <div className="space-y-4">
                           {productOptions.map((option) => (
                             <div key={option.name} className="flex flex-col space-y-2">
-                              <label className={`text-sm font-medium ${themeClasses.text} capitalize`}>
+                              <label className={`text-sm font-medium ${themeClasses?.text} capitalize`}>
                                 {option.name}:
                                 <span className="ml-1 font-semibold">
-                                  {selectedOptions[option.name] || `Select ${option.name}`}
+                                  {selectedOptions[option.name] || `Select ${option?.name}`}
                                 </span>
                               </label>
                               
@@ -599,7 +571,7 @@ export default function QuickViewModal({
                           )}
                         </div>
                       ) : (
-                        /* Simple variant picker for single option or no options */
+                       
                         <div className="flex flex-wrap gap-2">
                           {displayVariants?.map((variant) => (
                             <button
@@ -607,7 +579,7 @@ export default function QuickViewModal({
                               onClick={() => {
                                 setSelectedVariant(variant);
                                 
-                                // Update selected options
+                            
                                 const newOptions = {};
                                 if (variant?.selectedOptions) {
                                   variant?.selectedOptions.forEach(opt => {

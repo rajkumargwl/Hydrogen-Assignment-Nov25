@@ -80,7 +80,7 @@ export function ProductItem({
 
         <h4>{product.title}</h4>
         <small>
-          <Money data={product.priceRange.minVariantPrice} />
+          <Money data={product?.priceRange?.minVariantPrice} />
         </small>
       </Link>
          <div className="w-full md:w-1/2 mt-3 md:mt-0">
@@ -91,7 +91,7 @@ export function ProductItem({
     px-4 py-2 text-white text-sm font-medium rounded
     opacity-100 transition-opacity duration-300
      whitespace-nowrap
-    ${quickViewConfig?.button_font_size ? `text-[${quickViewConfig.button_font_size}px]` : 'text-sm'}
+    ${quickViewConfig?.button_font_size ? `text-[${quickViewConfig?.button_font_size}px]` : 'text-sm'}
   `}
   style={{
     backgroundColor: quickViewConfig?.button_color || "black",
