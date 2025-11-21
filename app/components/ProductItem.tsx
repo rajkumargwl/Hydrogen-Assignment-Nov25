@@ -52,12 +52,9 @@ export function ProductItem({
     switch (position) {
       case 'bottom_center_image':
         return 'bottom-2 left-1/2 -translate-x-1/2';
-      case 'top_right_image':
-        return 'top-2 right-2';
-      case 'top_left_image':
-        return 'top-2 left-2';
-      case 'center_image':
-        return 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2';
+      case 'Top_center_image':
+    return 'top-1 left-1/2 -translate-x-1/2';
+
       default:
         return 'bottom-2 left-1/2 -translate-x-1/2';
     }
@@ -86,6 +83,7 @@ export function ProductItem({
           <Money data={product.priceRange.minVariantPrice} />
         </small>
       </Link>
+         <div className="w-full md:w-1/2 mt-3 md:mt-0">
 {shouldShowQuickView && (
       <button
   className={`
@@ -105,6 +103,7 @@ export function ProductItem({
 
 
           )}
+          </div>
       {quickViewConfig?.quick_view_enabled === "true" && (
         <QuickViewModal
           product={product}
