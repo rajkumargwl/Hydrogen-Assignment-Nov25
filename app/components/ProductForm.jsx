@@ -11,6 +11,7 @@ import {useAside} from './Aside';
 export function ProductForm({productOptions, selectedVariant}) {
   const navigate = useNavigate();
   const {open} = useAside();
+  console.log(selectedVariant, '................');
   return (
     <div className="product-form">
       {productOptions.map((option) => {

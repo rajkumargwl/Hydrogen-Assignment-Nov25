@@ -65,7 +65,7 @@ export default function Homepage() {
   return (
     <div className="home">
       <FeaturedCollection collection={data.featuredCollection} />
-      <RecommendedProducts products={data.recommendedProducts} />
+      {/* <RecommendedProducts products={data.recommendedProducts} /> */}
     </div>
   );
 }

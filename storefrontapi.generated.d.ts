@@ -666,6 +666,156 @@ export type PageQuery = {
   >;
 };
 
+export type ProductFieldsFragment = Pick<
+  StorefrontAPI.Product,
+  'id' | 'title' | 'handle' | 'description' | 'productType'
+> & {
+  images: {
+    nodes: Array<
+      Pick<StorefrontAPI.Image, 'id' | 'url' | 'width' | 'height' | 'altText'>
+    >;
+  };
+  variants: {
+    nodes: Array<
+      Pick<
+        StorefrontAPI.ProductVariant,
+        'id' | 'title' | 'sku' | 'quantityAvailable' | 'availableForSale'
+      > & {
+        price: Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>;
+        image?: StorefrontAPI.Maybe<
+          Pick<StorefrontAPI.Image, 'src' | 'altText'>
+        >;
+        product: Pick<StorefrontAPI.Product, 'title' | 'handle'>;
+      }
+    >;
+  };
+};
+
+export type GetProductByHandleQueryVariables = StorefrontAPI.Exact<{
+  handle: StorefrontAPI.Scalars['String']['input'];
+  country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
+  language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
+}>;
+
+export type GetProductByHandleQuery = {
+  product?: StorefrontAPI.Maybe<
+    Pick<
+      StorefrontAPI.Product,
+      'id' | 'title' | 'handle' | 'description' | 'productType'
+    > & {
+      images: {
+        nodes: Array<
+          Pick<
+            StorefrontAPI.Image,
+            'id' | 'url' | 'width' | 'height' | 'altText'
+          >
+        >;
+      };
+      variants: {
+        nodes: Array<
+          Pick<
+            StorefrontAPI.ProductVariant,
+            'id' | 'title' | 'sku' | 'quantityAvailable' | 'availableForSale'
+          > & {
+            price: Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>;
+            image?: StorefrontAPI.Maybe<
+              Pick<StorefrontAPI.Image, 'src' | 'altText'>
+            >;
+            product: Pick<StorefrontAPI.Product, 'title' | 'handle'>;
+          }
+        >;
+      };
+    }
+  >;
+};
+
+export type MetaobjectsQueryVariables = StorefrontAPI.Exact<{
+  input: StorefrontAPI.Scalars['String']['input'];
+  country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
+  language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
+}>;
+
+export type MetaobjectsQuery = {
+  metaobjects: {
+    nodes: Array<
+      Pick<StorefrontAPI.Metaobject, 'handle' | 'id'> & {
+        fields: Array<
+          Pick<StorefrontAPI.MetaobjectField, 'key' | 'type' | 'value'> & {
+            reference?: StorefrontAPI.Maybe<
+              Pick<StorefrontAPI.Metaobject, 'id' | 'handle'> & {
+                fields: Array<
+                  Pick<StorefrontAPI.MetaobjectField, 'key' | 'type' | 'value'>
+                >;
+              }
+            >;
+          }
+        >;
+      }
+    >;
+  };
+};
+
+export type GetCollectionProductsQueryVariables = StorefrontAPI.Exact<{
+  handle: StorefrontAPI.Scalars['String']['input'];
+  first?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']['input']>;
+  after?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['String']['input']>;
+  last?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']['input']>;
+  before?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['String']['input']>;
+  country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
+  language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
+}>;
+
+export type GetCollectionProductsQuery = {
+  collection?: StorefrontAPI.Maybe<
+    Pick<StorefrontAPI.Collection, 'id' | 'title'> & {
+      products: {
+        edges: Array<
+          Pick<StorefrontAPI.ProductEdge, 'cursor'> & {
+            node: Pick<
+              StorefrontAPI.Product,
+              'id' | 'title' | 'handle' | 'description' | 'productType'
+            > & {
+              images: {
+                nodes: Array<
+                  Pick<
+                    StorefrontAPI.Image,
+                    'id' | 'url' | 'width' | 'height' | 'altText'
+                  >
+                >;
+              };
+              variants: {
+                nodes: Array<
+                  Pick<
+                    StorefrontAPI.ProductVariant,
+                    | 'id'
+                    | 'title'
+                    | 'sku'
+                    | 'quantityAvailable'
+                    | 'availableForSale'
+                  > & {
+                    price: Pick<
+                      StorefrontAPI.MoneyV2,
+                      'amount' | 'currencyCode'
+                    >;
+                    image?: StorefrontAPI.Maybe<
+                      Pick<StorefrontAPI.Image, 'src' | 'altText'>
+                    >;
+                    product: Pick<StorefrontAPI.Product, 'title' | 'handle'>;
+                  }
+                >;
+              };
+            };
+          }
+        >;
+        pageInfo: Pick<
+          StorefrontAPI.PageInfo,
+          'hasNextPage' | 'hasPreviousPage' | 'startCursor' | 'endCursor'
+        >;
+      };
+    }
+  >;
+};
+
 export type PolicyFragment = Pick<
   StorefrontAPI.ShopPolicy,
   'body' | 'handle' | 'id' | 'title' | 'url'
@@ -1233,6 +1383,18 @@ interface GeneratedQueryTypes {
   '#graphql\n  query Page(\n    $language: LanguageCode,\n    $country: CountryCode,\n    $handle: String!\n  )\n  @inContext(language: $language, country: $country) {\n    page(handle: $handle) {\n      handle\n      id\n      title\n      body\n      seo {\n        description\n        title\n      }\n    }\n  }\n': {
     return: PageQuery;
     variables: PageQueryVariables;
+  };
+  '#graphql\nfragment ProductFields on Product {\n  id\n  title\n  handle\n  description\n  productType\n  images(first: 50) {\n    nodes {\n      id\n      url\n      width\n      height\n      altText\n    }\n  }\n  variants(first: 50) {\n    nodes {\n      id\n      title\n      sku\n      quantityAvailable\n      availableForSale\n      price {\n        amount\n        currencyCode\n      }\n      image {\n        src\n        altText\n      }\n      product {\n        title\n        handle\n      }\n    }\n  }\n}\n\nquery GetProductByHandle(\n  $handle: String!\n  $country: CountryCode\n  $language: LanguageCode\n) @inContext(country: $country, language: $language) {\n  product(handle: $handle) {\n    ...ProductFields\n  }\n}\n': {
+    return: GetProductByHandleQuery;
+    variables: GetProductByHandleQueryVariables;
+  };
+  '#graphql\nquery metaobjects($input: String!, $country: CountryCode, $language: LanguageCode)\n@inContext(country: $country, language: $language) {\n  metaobjects(type: $input, first: 250) {\n    nodes {\n      handle\n      id\n      fields {\n        key\n        type\n        value\n        reference {\n          ... on Metaobject {\n            id\n            handle\n            fields {\n              key\n              type\n              value\n            }\n          }\n        }\n      }\n    }\n  }\n}\n': {
+    return: MetaobjectsQuery;
+    variables: MetaobjectsQueryVariables;
+  };
+  ' #graphql\nfragment ProductFields on Product {\n  id\n  title\n  handle\n  description\n  productType\n  images(first: 50) {\n    nodes {\n      id\n      url\n      width\n      height\n      altText\n    }\n  }\n  variants(first: 50) {\n    nodes {\n      id\n      title\n      sku\n      quantityAvailable\n      availableForSale\n      price {\n        amount\n        currencyCode\n      }\n        image {\n        src\n        altText\n      }\n         product {\n      title\n      handle\n    }\n    }\n  }\n}\n\nquery GetCollectionProducts(\n  $handle: String!\n  $first: Int\n  $after: String\n  $last: Int\n  $before: String\n  $country: CountryCode\n  $language: LanguageCode\n) @inContext(country: $country, language: $language) {\n  collection(handle: $handle) {\n    id\n    title\n    products(\n      first: $first\n      after: $after\n      last: $last\n      before: $before\n    ) {\n      edges {\n        cursor\n        node {\n          ...ProductFields\n        }\n      }\n      pageInfo {\n        hasNextPage\n        hasPreviousPage\n        startCursor\n        endCursor\n      }\n    }\n  }\n}': {
+    return: GetCollectionProductsQuery;
+    variables: GetCollectionProductsQueryVariables;
   };
   '#graphql\n  fragment Policy on ShopPolicy {\n    body\n    handle\n    id\n    title\n    url\n  }\n  query Policy(\n    $country: CountryCode\n    $language: LanguageCode\n    $privacyPolicy: Boolean!\n    $refundPolicy: Boolean!\n    $shippingPolicy: Boolean!\n    $termsOfService: Boolean!\n  ) @inContext(language: $language, country: $country) {\n    shop {\n      privacyPolicy @include(if: $privacyPolicy) {\n        ...Policy\n      }\n      shippingPolicy @include(if: $shippingPolicy) {\n        ...Policy\n      }\n      termsOfService @include(if: $termsOfService) {\n        ...Policy\n      }\n      refundPolicy @include(if: $refundPolicy) {\n        ...Policy\n      }\n    }\n  }\n': {
     return: PolicyQuery;
