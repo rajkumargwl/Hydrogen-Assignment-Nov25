@@ -2,6 +2,8 @@ import {Suspense} from 'react';
 import {Await, NavLink, useAsyncValue} from 'react-router';
 import {useAnalytics, useOptimisticCart} from '@shopify/hydrogen';
 import {useAside} from '~/components/Aside';
+import { Link } from "react-router-dom";
+
 
 /**
  * @param {HeaderProps}
@@ -57,7 +59,6 @@ export function HeaderMenu({
       {(menu || FALLBACK_HEADER_MENU).items.map((item) => {
         if (!item.url) return null;
 
-        // if the url is internal, we strip the domain
         const url =
           item.url.includes('myshopify.com') ||
           item.url.includes(publicStoreDomain) ||
@@ -97,7 +98,7 @@ function HeaderCtas({isLoggedIn, cart}) {
         </Suspense>
       </NavLink>
       <SearchToggle />
-      <CartToggle cart={cart} />
+      <Link to="/cart">Cart</Link>
     </nav>
   );
 }

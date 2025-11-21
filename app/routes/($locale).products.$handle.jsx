@@ -11,6 +11,7 @@ import {ProductPrice} from '~/components/ProductPrice';
 import {ProductImage} from '~/components/ProductImage';
 import {ProductForm} from '~/components/ProductForm';
 import {redirectIfHandleIsLocalized} from '~/lib/redirect';
+import {calculateCustomPrice} from '~/lib/price-utils';
 
 /**
  * @type {Route.MetaFunction}
@@ -29,11 +30,10 @@ export const meta = ({data}) => {
  * @param {Route.LoaderArgs} args
  */
 export async function loader(args) {
-  // Start fetching non-critical data without blocking time to first byte
   const deferredData = loadDeferredData(args);
 
-  // Await the critical data required to render initial state of the page
   const criticalData = await loadCriticalData(args);
+
 
   return {...deferredData, ...criticalData};
 }
@@ -55,15 +55,14 @@ async function loadCriticalData({context, params, request}) {
     storefront.query(PRODUCT_QUERY, {
       variables: {handle, selectedOptions: getSelectedProductOptions(request)},
     }),
-    // Add other queries here, so that they are loaded in parallel
   ]);
 
   if (!product?.id) {
     throw new Response(null, {status: 404});
   }
 
-  // The API handle might be localized, so redirect to the localized handle
   redirectIfHandleIsLocalized(request, {handle, data: product});
+
 
   return {
     product,
@@ -77,15 +76,14 @@ async function loadCriticalData({context, params, request}) {
  * @param {Route.LoaderArgs}
  */
 function loadDeferredData({context, params}) {
-  // Put any API calls that is not critical to be available on first page render
-  // For example: product reviews, product recommendations, social feeds.
-
   return {};
 }
 
 export default function Product() {
   /** @type {LoaderReturnData} */
   const {product} = useLoaderData();
+
+  const {customPrice, originalPrice, appliedDiscountType} = calculateCustomPrice(product);
 
   // Optimistically selects a variant with given available variant information
   const selectedVariant = useOptimisticVariant(
@@ -111,6 +109,9 @@ export default function Product() {
       <div className="product-main">
         <h1>{title}</h1>
         <ProductPrice
+          customPrice={customPrice} 
+          originalPrice={originalPrice} 
+          appliedDiscountType={appliedDiscountType} 
           price={selectedVariant?.price}
           compareAtPrice={selectedVariant?.compareAtPrice}
         />
@@ -118,6 +119,8 @@ export default function Product() {
         <ProductForm
           productOptions={productOptions}
           selectedVariant={selectedVariant}
+          customPrice={customPrice} 
+          originalPrice={originalPrice} 
         />
         <br />
         <br />
@@ -184,6 +187,37 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
   }
 `;
 
+const CUSTOM_PRICING_METAFIEILDS_FRAGMENT = `#graphql
+  fragment CustomPricingMetafields on Product {
+    customPrice: metafield(
+      namespace: "custom_pricing"
+      key: "price"
+    ) {
+      key
+      value
+      namespace
+    }
+    
+    discountPercentage: metafield(
+      namespace: "custom_pricing"
+      key: "discount_percentage"
+    ) {
+      key
+      value
+      namespace
+    }
+    
+    discountFixedAmount: metafield(
+      namespace: "custom_pricing"
+      key: "discount_fixed_amount"
+    ) {
+      key
+      value
+      namespace
+    }
+  }
+`;
+
 const PRODUCT_FRAGMENT = `#graphql
   fragment Product on Product {
     id
@@ -194,6 +228,7 @@ const PRODUCT_FRAGMENT = `#graphql
     description
     encodedVariantExistence
     encodedVariantAvailability
+    ...CustomPricingMetafields
     options {
       name
       optionValues {
@@ -223,6 +258,7 @@ const PRODUCT_FRAGMENT = `#graphql
     }
   }
   ${PRODUCT_VARIANT_FRAGMENT}
+  ${CUSTOM_PRICING_METAFIEILDS_FRAGMENT}
 `;
 
 const PRODUCT_QUERY = `#graphql

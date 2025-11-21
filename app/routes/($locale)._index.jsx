@@ -2,6 +2,7 @@ import {Await, useLoaderData, Link} from 'react-router';
 import {Suspense} from 'react';
 import {Image} from '@shopify/hydrogen';
 import {ProductItem} from '~/components/ProductItem';
+import {HeroBanner} from '~/components/HeroBanner';
 
 /**
  * @type {Route.MetaFunction}
@@ -14,10 +15,8 @@ export const meta = () => {
  * @param {Route.LoaderArgs} args
  */
 export async function loader(args) {
-  // Start fetching non-critical data without blocking time to first byte
   const deferredData = loadDeferredData(args);
 
-  // Await the critical data required to render initial state of the page
   const criticalData = await loadCriticalData(args);
 
   return {...deferredData, ...criticalData};
@@ -33,9 +32,8 @@ async function loadCriticalData({context}) {
     context.storefront.query(FEATURED_COLLECTION_QUERY),
     // Add other queries here, so that they are loaded in parallel
   ]);
-
   return {
-    featuredCollection: collections.nodes[0],
+    featuredCollections: collections.nodes,
   };
 }
 
@@ -64,7 +62,8 @@ export default function Homepage() {
   const data = useLoaderData();
   return (
     <div className="home">
-      <FeaturedCollection collection={data.featuredCollection} />
+      <HeroBanner/>
+      <FeaturedCollectionsGrid collections={data.featuredCollections} />
       <RecommendedProducts products={data.recommendedProducts} />
     </div>
   );
@@ -75,14 +74,27 @@ export default function Homepage() {
  *   collection: FeaturedCollectionFragment;
  * }}
  */
+
+
+function FeaturedCollectionsGrid({collections}) {
+  if (!collections) return null;
+
+  return (
+    <div className="collections-grid">
+      {collections.map((collection) => (
+        <FeaturedCollection key={collection.id} collection={collection} />
+      ))}
+    </div>
+  );
+}
+
+
 function FeaturedCollection({collection}) {
   if (!collection) return null;
   const image = collection?.image;
+
   return (
-    <Link
-      className="featured-collection"
-      to={`/collections/${collection.handle}`}
-    >
+    <Link className="featured-collection" to={`/collections/${collection.handle}`}>
       {image && (
         <div className="featured-collection-image">
           <Image data={image} sizes="100vw" />
@@ -92,6 +104,7 @@ function FeaturedCollection({collection}) {
     </Link>
   );
 }
+
 
 /**
  * @param {{
@@ -120,6 +133,40 @@ function RecommendedProducts({products}) {
   );
 }
 
+const CUSTOM_PRICING_METAFIEILDS_FRAGMENT = `#graphql
+  fragment CustomPricingMetafields on Product {
+    # 1. Base Price
+    customPrice: metafield(
+      namespace: "custom_pricing"
+      key: "price"
+    ) {
+      key
+      value
+      namespace
+    }
+    
+    # 2. Discount Percentage
+    discountPercentage: metafield(
+      namespace: "custom_pricing"
+      key: "discount_percentage"
+    ) {
+      key
+      value
+      namespace
+    }
+    
+    # 3. Fixed Discount Amount
+    discountFixedAmount: metafield(
+      namespace: "custom_pricing"
+      key: "discount_fixed_amount"
+    ) {
+      key
+      value
+      namespace
+    }
+  }
+`;
+
 const FEATURED_COLLECTION_QUERY = `#graphql
   fragment FeaturedCollection on Collection {
     id
@@ -135,7 +182,7 @@ const FEATURED_COLLECTION_QUERY = `#graphql
   }
   query FeaturedCollection($country: CountryCode, $language: LanguageCode)
     @inContext(country: $country, language: $language) {
-    collections(first: 1, sortKey: UPDATED_AT, reverse: true) {
+    collections(first: 50, sortKey: UPDATED_AT, reverse: true) {
       nodes {
         ...FeaturedCollection
       }
@@ -148,6 +195,7 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
     id
     title
     handle
+    ...CustomPricingMetafields
     priceRange {
       minVariantPrice {
         amount
@@ -170,6 +218,7 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
       }
     }
   }
+  ${CUSTOM_PRICING_METAFIEILDS_FRAGMENT}
 `;
 
 /** @typedef {import('./+types/_index').Route} Route */

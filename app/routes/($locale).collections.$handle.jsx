@@ -15,10 +15,8 @@ export const meta = ({data}) => {
  * @param {Route.LoaderArgs} args
  */
 export async function loader(args) {
-  // Start fetching non-critical data without blocking time to first byte
   const deferredData = loadDeferredData(args);
 
-  // Await the critical data required to render initial state of the page
   const criticalData = await loadCriticalData(args);
 
   return {...deferredData, ...criticalData};
@@ -53,7 +51,6 @@ async function loadCriticalData({context, params, request}) {
     });
   }
 
-  // The API handle might be localized, so redirect to the localized handle
   redirectIfHandleIsLocalized(request, {handle, data: collection});
 
   return {
@@ -103,6 +100,40 @@ export default function Collection() {
   );
 }
 
+const CUSTOM_PRICING_METAFIEILDS_FRAGMENT = `#graphql
+  fragment CustomPricingMetafields on Product {
+    # 1. Base Price
+    customPrice: metafield(
+      namespace: "custom_pricing"
+      key: "price"
+    ) {
+      key
+      value
+      namespace
+    }
+    
+    # 2. Discount Percentage
+    discountPercentage: metafield(
+      namespace: "custom_pricing"
+      key: "discount_percentage"
+    ) {
+      key
+      value
+      namespace
+    }
+    
+    # 3. Fixed Discount Amount
+    discountFixedAmount: metafield(
+      namespace: "custom_pricing"
+      key: "discount_fixed_amount"
+    ) {
+      key
+      value
+      namespace
+    }
+  }
+`;
+
 const PRODUCT_ITEM_FRAGMENT = `#graphql
   fragment MoneyProductItem on MoneyV2 {
     amount
@@ -112,6 +143,7 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
     id
     handle
     title
+    ...CustomPricingMetafields
     featuredImage {
       id
       altText
@@ -128,9 +160,9 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
       }
     }
   }
+  ${CUSTOM_PRICING_METAFIEILDS_FRAGMENT}
 `;
 
-// NOTE: https://shopify.dev/docs/api/storefront/2022-04/objects/collection
 const COLLECTION_QUERY = `#graphql
   ${PRODUCT_ITEM_FRAGMENT}
   query Collection(

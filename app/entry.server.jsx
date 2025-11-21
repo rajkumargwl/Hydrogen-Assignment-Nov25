@@ -2,6 +2,7 @@ import {ServerRouter} from 'react-router';
 import {isbot} from 'isbot';
 import {renderToReadableStream} from 'react-dom/server';
 import {createContentSecurityPolicy} from '@shopify/hydrogen';
+import {shopifyAdminClient} from './lib/shopifyAdminClient';
 
 /**
  * @param {Request} request
@@ -17,6 +18,18 @@ export default async function handleRequest(
   reactRouterContext,
   context,
 ) {
+
+  const storeDomain = context.env.PUBLIC_STORE_DOMAIN || context.env.SHOPIFY_SHOP_DOMAIN;
+  const accessToken = context.env.SHOPIFY_ADMIN_API_ACCESS_TOKEN;
+  const apiVersion = context.env.SHOPIFY_ADMIN_API_VERSION;
+
+  context.admin = shopifyAdminClient({
+    storeDomain,
+    accessToken,
+    apiVersion,
+  });
+
+
   const {nonce, header, NonceProvider} = createContentSecurityPolicy({
     shop: {
       checkoutDomain: context.env.PUBLIC_CHECKOUT_DOMAIN,

@@ -1,80 +1,189 @@
+import React, {useEffect, useRef} from 'react';
+import {useFetcher} from 'react-router'; 
 import {CartForm, Money} from '@shopify/hydrogen';
-import {useEffect, useRef} from 'react';
-import {useFetcher} from 'react-router';
 
-/**
- * @param {CartSummaryProps}
- */
-export function CartSummary({cart, layout}) {
+export function CartSummary({cart, layout = 'aside'}) {
   const className =
     layout === 'page' ? 'cart-summary-page' : 'cart-summary-aside';
 
+  const {customSubtotal, regularSubtotal, totalSavings} =
+    calculateCartTotals(cart);
+
   return (
     <div aria-labelledby="cart-summary" className={className}>
-      <h4>Totals</h4>
+      <h4 id="cart-summary">Totals</h4>
+
+      {totalSavings > 0 && (
+        <div
+          style={{
+            backgroundColor: '#e8f5e9',
+            padding: '10px',
+            marginBottom: '12px',
+            borderRadius: '4px',
+          }}
+        >
+          <dl className="cart-discount-info">
+            <dt style={{color: '#666', fontSize: '0.9em'}}>Regular Price:</dt>
+            <dd style={{textDecoration: 'line-through', color: '#999'}}>
+              ₹{regularSubtotal.toFixed(2)}
+            </dd>
+          </dl>
+
+          <dl className="cart-discount-info" style={{marginTop: '6px'}}>
+            <dt
+              style={{
+                color: '#2e7d32',
+                fontWeight: 'bold',
+                fontSize: '0.9em',
+              }}
+            >
+              You Save:
+            </dt>
+            <dd style={{color: '#2e7d32', fontWeight: 'bold'}}>
+              ₹{totalSavings.toFixed(2)}
+            </dd>
+          </dl>
+        </div>
+      )}
+
       <dl className="cart-subtotal">
         <dt>Subtotal</dt>
         <dd>
-          {cart?.cost?.subtotalAmount?.amount ? (
+          {customSubtotal > 0 ? (
+            <span style={{fontWeight: 'bold', fontSize: '1.1em'}}>
+              ₹{customSubtotal.toFixed(2)}
+            </span>
+          ) : cart?.cost?.subtotalAmount?.amount ? (
             <Money data={cart?.cost?.subtotalAmount} />
           ) : (
             '-'
           )}
         </dd>
       </dl>
+
       <CartDiscounts discountCodes={cart?.discountCodes} />
       <CartGiftCard giftCardCodes={cart?.appliedGiftCards} />
-      <CartCheckoutActions checkoutUrl={cart?.checkoutUrl} />
+      
+      <DraftOrderCheckoutActions cart={cart} />
+
+      <style>{`
+        .cart-summary-page {
+          max-width: 420px;
+        }
+        .cart-summary-aside {
+          width: 320px;
+        }
+        .cart-subtotal dt,
+        .cart-subtotal dd {
+          margin: 0;
+        }
+      `}</style>
     </div>
   );
 }
 
-/**
- * @param {{checkoutUrl?: string}}
- */
-function CartCheckoutActions({checkoutUrl}) {
-  if (!checkoutUrl) return null;
+function parseAttributeFloat(value) {
+  if (value == null) return 0;
+  const parsed = parseFloat(String(value).replace(/[^0-9.-]+/g, ''));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function calculateCartTotals(cart) {
+  let customSubtotal = 0;
+  let regularSubtotal = 0;
+
+  const lines = cart?.lines?.nodes ?? [];
+
+  for (const line of lines) {
+    const attrs = line.attributes ?? [];
+    const customAttr = attrs.find((a) => a.key === '_custom_unit_price');
+    const originalAttr = attrs.find((a) => a.key === '_original_unit_price');
+
+    const fallback =
+      line?.cost?.amountPerQuantity?.amount
+        ? parseFloat(line.cost.amountPerQuantity.amount)
+        : 0;
+
+    const custom = customAttr ? parseAttributeFloat(customAttr.value) : fallback;
+    const original = originalAttr
+      ? parseAttributeFloat(originalAttr.value)
+      : fallback;
+
+    customSubtotal += custom * line.quantity;
+    regularSubtotal += original * line.quantity;
+  }
+
+  return {
+    customSubtotal,
+    regularSubtotal,
+    totalSavings: Math.max(0, regularSubtotal - customSubtotal),
+  };
+}
+
+const CHECKOUT_REDIRECT_ACTION = 'CHECKOUT_REDIRECT';
+
+function DraftOrderCheckoutActions({cart}) {
+  const hasItems = (cart?.lines?.nodes?.length ?? 0) > 0;
+  
+  if (!hasItems) return null;
 
   return (
-    <div>
-      <a href={checkoutUrl} target="_self">
-        <p>Continue to Checkout &rarr;</p>
-      </a>
-      <br />
-    </div>
+    <CartForm
+        route="/cart"
+        action={CHECKOUT_REDIRECT_ACTION}
+    >
+        {({state}) => (
+            <div>
+                <button
+                    type="submit"
+                    disabled={state !== 'idle'}
+                    style={{
+                        display: 'block',
+                        width: '100%',
+                        padding: '12px',
+                        backgroundColor: '#1976d2',
+                        color: '#fff',
+                        borderRadius: '4px',
+                        border: 'none',
+                        textAlign: 'center',
+                        textDecoration: 'none',
+                        cursor: 'pointer',
+                        fontSize: '1em',
+                        fontWeight: 'bold',
+                        opacity: state !== 'idle' ? 0.7 : 1,
+                    }}
+                >
+                    {state === 'submitting' ? 'Creating Checkout...' : 'Continue to Checkout →'}
+                </button>
+
+                <p style={{fontSize: '0.75em', color: '#666', marginTop: '8px'}}>
+                    Custom pricing will be applied via Draft Order.
+                </p>
+            </div>
+        )}
+    </CartForm>
   );
 }
 
-/**
- * @param {{
- *   discountCodes?: CartApiQueryFragment['discountCodes'];
- * }}
- */
 function CartDiscounts({discountCodes}) {
   const codes =
-    discountCodes
-      ?.filter((discount) => discount.applicable)
-      ?.map(({code}) => code) || [];
+    discountCodes?.filter((d) => d.applicable)?.map((d) => d.code) ?? [];
 
   return (
-    <div>
-      {/* Have existing discount, display it with a remove option */}
+    <div style={{marginBottom: '12px'}}>
       <dl hidden={!codes.length}>
-        <div>
-          <dt>Discount(s)</dt>
-          <UpdateDiscountForm>
-            <div className="cart-discount">
-              <code>{codes?.join(', ')}</code>
-              &nbsp;
-              <button>Remove</button>
-            </div>
-          </UpdateDiscountForm>
-        </div>
+        <dt>Discount(s)</dt>
+        <UpdateDiscountForm>
+          <div className="cart-discount">
+            <code>{codes.join(', ')}</code>
+            &nbsp;
+            <button type="submit">Remove</button>
+          </div>
+        </UpdateDiscountForm>
       </dl>
 
-      {/* Show an input to apply a discount */}
       <UpdateDiscountForm discountCodes={codes}>
-        <div>
+        <div style={{marginTop: codes.length ? '8px' : 0}}>
           <input type="text" name="discountCode" placeholder="Discount code" />
           &nbsp;
           <button type="submit">Apply</button>
@@ -84,62 +193,28 @@ function CartDiscounts({discountCodes}) {
   );
 }
 
-/**
- * @param {{
- *   discountCodes?: string[];
- *   children: React.ReactNode;
- * }}
- */
-function UpdateDiscountForm({discountCodes, children}) {
-  return (
-    <CartForm
-      route="/cart"
-      action={CartForm.ACTIONS.DiscountCodesUpdate}
-      inputs={{
-        discountCodes: discountCodes || [],
-      }}
-    >
-      {children}
-    </CartForm>
-  );
-}
-
-/**
- * @param {{
- *   giftCardCodes: CartApiQueryFragment['appliedGiftCards'] | undefined;
- * }}
- */
 function CartGiftCard({giftCardCodes}) {
   const appliedGiftCardCodes = useRef([]);
-  const giftCardCodeInput = useRef(null);
-  const giftCardAddFetcher = useFetcher({key: 'gift-card-add'});
+  const inputRef = useRef(null);
+  const fetcher = useFetcher({key: 'gift-card-add'});
 
-  // Clear the gift card code input after the gift card is added
   useEffect(() => {
-    if (giftCardAddFetcher.data) {
-      giftCardCodeInput.current.value = '';
+    if (fetcher.data && inputRef.current) {
+      inputRef.current.value = '';
     }
-  }, [giftCardAddFetcher.data]);
-
-  function saveAppliedCode(code) {
-    const formattedCode = code.replace(/\s/g, ''); // Remove spaces
-    if (!appliedGiftCardCodes.current.includes(formattedCode)) {
-      appliedGiftCardCodes.current.push(formattedCode);
-    }
-  }
+  }, [fetcher.data]);
 
   return (
-    <div>
-      {/* Display applied gift cards with individual remove buttons */}
-      {giftCardCodes && giftCardCodes.length > 0 && (
+    <div style={{marginBottom: '12px'}}>
+      {giftCardCodes?.length > 0 && (
         <dl>
           <dt>Applied Gift Card(s)</dt>
-          {giftCardCodes.map((giftCard) => (
-            <RemoveGiftCardForm key={giftCard.id} giftCardId={giftCard.id}>
+          {giftCardCodes.map((gc) => (
+            <RemoveGiftCardForm key={gc.id} giftCardId={gc.id}>
               <div className="cart-discount">
-                <code>***{giftCard.lastCharacters}</code>
+                <code>***{gc.lastCharacters}</code>
                 &nbsp;
-                <Money data={giftCard.amountUsed} />
+                <Money data={gc.amountUsed} />
                 &nbsp;
                 <button type="submit">Remove</button>
               </div>
@@ -148,91 +223,60 @@ function CartGiftCard({giftCardCodes}) {
         </dl>
       )}
 
-      {/* Show an input to apply a gift card */}
       <UpdateGiftCardForm
         giftCardCodes={appliedGiftCardCodes.current}
-        saveAppliedCode={saveAppliedCode}
         fetcherKey="gift-card-add"
       >
-        <div>
+        <div style={{marginTop: '8px'}}>
           <input
+            ref={inputRef}
             type="text"
             name="giftCardCode"
             placeholder="Gift card code"
-            ref={giftCardCodeInput}
           />
           &nbsp;
-          <button type="submit" disabled={giftCardAddFetcher.state !== 'idle'}>
-            Apply
-          </button>
+          <button type="submit">Apply</button>
         </div>
       </UpdateGiftCardForm>
     </div>
   );
 }
 
-/**
- * @param {{
- *   giftCardCodes?: string[];
- *   saveAppliedCode?: (code: string) => void;
- *   fetcherKey?: string;
- *   children: React.ReactNode;
- * }}
- */
-function UpdateGiftCardForm({
-  giftCardCodes,
-  saveAppliedCode,
-  fetcherKey,
-  children,
-}) {
+function UpdateDiscountForm({discountCodes = [], children}) {
+  return (
+    <CartForm
+      route="/cart"
+      action={CartForm.ACTIONS.DiscountCodesUpdate}
+      inputs={{discountCodes}}
+    >
+      {() => children}
+    </CartForm>
+  );
+}
+
+function UpdateGiftCardForm({giftCardCodes = [], fetcherKey, children}) {
   return (
     <CartForm
       fetcherKey={fetcherKey}
       route="/cart"
       action={CartForm.ACTIONS.GiftCardCodesUpdate}
-      inputs={{
-        giftCardCodes: giftCardCodes || [],
-      }}
+      inputs={{giftCardCodes}}
     >
-      {(fetcher) => {
-        const code = fetcher.formData?.get('giftCardCode');
-        if (code && saveAppliedCode) {
-          saveAppliedCode(code);
-        }
-        return children;
-      }}
+      {() => children}
     </CartForm>
   );
 }
 
-/**
- * @param {{
- *   giftCardId: string;
- *   children: React.ReactNode;
- * }}
- */
 function RemoveGiftCardForm({giftCardId, children}) {
   return (
     <CartForm
       route="/cart"
       action={CartForm.ACTIONS.GiftCardCodesRemove}
-      inputs={{
-        giftCardCodes: [giftCardId],
-      }}
+      inputs={{giftCardCodes: [giftCardId]}}
     >
-      {children}
+      {() => children}
     </CartForm>
   );
 }
 
-/**
- * @typedef {{
- *   cart: OptimisticCart<CartApiQueryFragment | null>;
- *   layout: CartLayout;
- * }} CartSummaryProps
- */
-
-/** @typedef {import('storefrontapi.generated').CartApiQueryFragment} CartApiQueryFragment */
-/** @typedef {import('~/components/CartMain').CartLayout} CartLayout */
-/** @typedef {import('@shopify/hydrogen').OptimisticCart} OptimisticCart */
-/** @typedef {import('react-router').FetcherWithComponents} FetcherWithComponents */
+export default CartSummary;

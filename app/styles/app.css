@@ -572,3 +572,80 @@ button.reset:hover:not(:has(> *)) {
   gap: 0.75rem;
   flex-wrap: wrap;
 }
+
+
+/* Full-width layout with huge gaps */
+.collections-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(450px, 1fr)); 
+  /* each card is BIG (450px min), fills full width */
+  gap: 60px;                /* huge gap */
+  padding: 40px 20px;       /* spacing around grid */
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Big collection card */
+.featured-collection {
+  display: block;
+  text-align: center;
+  width: 100%;
+  text-decoration: none;
+}
+
+/* Very large images */
+.featured-collection-image {
+  width: 100%;
+  height: 350px;           /* MUCH bigger */
+  overflow: hidden;
+  border-radius: 16px;     /* nicer corners */
+  margin-bottom: 20px;
+}
+
+.featured-collection-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Large bold titles */
+.featured-collection h1 {
+  font-size: 28px;         /* big */
+  font-weight: 800;        /* very bold */
+  color: #111;
+  margin-top: 10px;
+  letter-spacing: 0.5px;
+}
+
+.hero-banner {
+  width: 100%;
+  height: 50vh;                   /* nice big banner */
+  background-image: url('https://via.placeholder.com/1400x600?text=Hero+Banner');
+  background-size: cover;
+  background-position: center;
+  border-radius: 16px;
+  margin: 40px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #800000;
+}
+
+.hero-content {
+  text-align: center;
+  color: white;
+  text-shadow: 0px 4px 15px rgba(0,0,0,0.5);
+  padding: 0 20px;
+}
+
+.hero-content h1 {
+  font-size: 48px;
+  font-weight: 800;
+  margin-bottom: 16px;
+}
+
+.hero-content p {
+  font-size: 20px;
+  margin-bottom: 24px;
+}
+

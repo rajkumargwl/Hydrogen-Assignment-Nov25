@@ -38,7 +38,6 @@ async function loadCriticalData({context, request}) {
     storefront.query(CATALOG_QUERY, {
       variables: {...paginationVariables},
     }),
-    // Add other queries here, so that they are loaded in parallel
   ]);
   return {products};
 }
@@ -76,6 +75,40 @@ export default function Collection() {
   );
 }
 
+const CUSTOM_PRICING_METAFIEILDS_FRAGMENT = `#graphql
+  fragment CustomPricingMetafields on Product {
+    # 1. Base Price
+    customPrice: metafield(
+      namespace: "custom_pricing"
+      key: "price"
+    ) {
+      key
+      value
+      namespace
+    }
+    
+    # 2. Discount Percentage
+    discountPercentage: metafield(
+      namespace: "custom_pricing"
+      key: "discount_percentage"
+    ) {
+      key
+      value
+      namespace
+    }
+    
+    # 3. Fixed Discount Amount
+    discountFixedAmount: metafield(
+      namespace: "custom_pricing"
+      key: "discount_fixed_amount"
+    ) {
+      key
+      value
+      namespace
+    }
+  }
+`;
+
 const COLLECTION_ITEM_FRAGMENT = `#graphql
   fragment MoneyCollectionItem on MoneyV2 {
     amount
@@ -85,6 +118,7 @@ const COLLECTION_ITEM_FRAGMENT = `#graphql
     id
     handle
     title
+    ...CustomPricingMetafields
     featuredImage {
       id
       altText
@@ -103,7 +137,6 @@ const COLLECTION_ITEM_FRAGMENT = `#graphql
   }
 `;
 
-// NOTE: https://shopify.dev/docs/api/storefront/latest/objects/product
 const CATALOG_QUERY = `#graphql
   query Catalog(
     $country: CountryCode
@@ -126,6 +159,7 @@ const CATALOG_QUERY = `#graphql
     }
   }
   ${COLLECTION_ITEM_FRAGMENT}
+  ${CUSTOM_PRICING_METAFIEILDS_FRAGMENT}
 `;
 
 /** @typedef {import('./+types/collections.all').Route} Route */

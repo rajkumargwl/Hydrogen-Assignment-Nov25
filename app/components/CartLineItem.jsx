@@ -1,22 +1,46 @@
-import {CartForm, Image} from '@shopify/hydrogen';
+import {CartForm, Image, Money} from '@shopify/hydrogen';
 import {useVariantUrl} from '~/lib/variants';
 import {Link} from 'react-router';
-import {ProductPrice} from './ProductPrice';
 import {useAside} from './Aside';
 
-/**
- * A single line item in the cart. It displays the product image, title, price.
- * It also provides controls to update the quantity or remove the line item.
- * @param {{
- *   layout: CartLayout;
- *   line: CartLine;
- * }}
- */
 export function CartLineItem({layout, line}) {
   const {id, merchandise} = line;
   const {product, title, image, selectedOptions} = merchandise;
   const lineItemUrl = useVariantUrl(product.handle, selectedOptions);
   const {close} = useAside();
+
+  // Access attributes from line.attributes
+  const customPriceAttribute = (line.attributes ?? []).find(
+    (attr) => attr.key === '_custom_unit_price',
+  );
+  const originalPriceAttribute = (line.attributes ?? []).find(
+    (attr) => attr.key === '_original_unit_price',
+  );
+
+  const customPriceValue = customPriceAttribute?.value;
+  const originalPriceValue = originalPriceAttribute?.value;
+
+  const hasCustomPrice = !!customPriceValue && !!originalPriceValue;
+  
+  const currencyCode = line.cost?.amountPerQuantity?.currencyCode || 'INR';
+  
+  let hasDiscount = false;
+  let customUnitAmount = 0;
+  let originalUnitAmount = 0;
+  
+  if (hasCustomPrice) {
+    customUnitAmount = parseFloat(customPriceValue);
+    originalUnitAmount = parseFloat(originalPriceValue);
+    
+    if (!isNaN(customUnitAmount) && !isNaN(originalUnitAmount)) {
+      hasDiscount = customUnitAmount < originalUnitAmount;
+    }
+  }
+
+  const createMoneyData = (amount) => ({
+    amount: amount.toFixed(2), 
+    currencyCode: currencyCode,
+  });
 
   return (
     <li key={id} className="cart-line">
@@ -45,7 +69,38 @@ export function CartLineItem({layout, line}) {
             <strong>{product.title}</strong>
           </p>
         </Link>
-        <ProductPrice price={line?.cost?.totalAmount} />
+        
+        {hasCustomPrice ? (
+          <div className="flex flex-col space-y-1">
+            <div className="flex items-center space-x-2">
+              {hasDiscount && (
+                <s className="text-gray-500 text-sm">
+                  <Money data={createMoneyData(originalUnitAmount)} />
+                </s>
+              )}
+              
+              <p className={hasDiscount ? 'font-bold text-red-600' : 'font-bold'}>
+                <Money data={createMoneyData(customUnitAmount)} />
+              </p>
+            </div>
+            
+            <p className="text-sm text-gray-600">
+              Total: <Money data={createMoneyData(customUnitAmount * line.quantity)} />
+            </p>
+          </div>
+        ) : (
+          line.cost ? (
+            <div>
+              <Money data={line.cost.amountPerQuantity} />
+              <p className="text-sm text-gray-600">
+                Total: <Money data={line.cost.totalAmount} />
+              </p>
+            </div>
+          ) : (
+             <p className="text-sm text-gray-500">Loading price...</p>
+          )
+        )}
+        
         <ul>
           {selectedOptions.map((option) => (
             <li key={option.name}>
@@ -61,12 +116,6 @@ export function CartLineItem({layout, line}) {
   );
 }
 
-/**
- * Provides the controls to update the quantity of a line item in the cart.
- * These controls are disabled when the line item is new, and the server
- * hasn't yet responded that it was successfully added to the cart.
- * @param {{line: CartLine}}
- */
 function CartLineQuantity({line}) {
   if (!line || typeof line?.quantity === 'undefined') return null;
   const {id: lineId, quantity, isOptimistic} = line;
@@ -103,15 +152,6 @@ function CartLineQuantity({line}) {
   );
 }
 
-/**
- * A button that removes a line item from the cart. It is disabled
- * when the line item is new, and the server hasn't yet responded
- * that it was successfully added to the cart.
- * @param {{
- *   lineIds: string[];
- *   disabled: boolean;
- * }}
- */
 function CartLineRemoveButton({lineIds, disabled}) {
   return (
     <CartForm
@@ -129,8 +169,8 @@ function CartLineRemoveButton({lineIds, disabled}) {
 
 /**
  * @param {{
- *   children: React.ReactNode;
- *   lines: CartLineUpdateInput[];
+ * children: React.ReactNode;
+ * lines: CartLineUpdateInput[];
  * }}
  */
 function CartLineUpdateButton({children, lines}) {
@@ -148,20 +188,6 @@ function CartLineUpdateButton({children, lines}) {
   );
 }
 
-/**
- * Returns a unique key for the update action. This is used to make sure actions modifying the same line
- * items are not run concurrently, but cancel each other. For example, if the user clicks "Increase quantity"
- * and "Decrease quantity" in rapid succession, the actions will cancel each other and only the last one will run.
- * @returns
- * @param {string[]} lineIds - line ids affected by the update
- */
 function getUpdateKey(lineIds) {
   return [CartForm.ACTIONS.LinesUpdate, ...lineIds].join('-');
 }
-
-/** @typedef {OptimisticCartLine<CartApiQueryFragment>} CartLine */
-
-/** @typedef {import('@shopify/hydrogen/storefront-api-types').CartLineUpdateInput} CartLineUpdateInput */
-/** @typedef {import('~/components/CartMain').CartLayout} CartLayout */
-/** @typedef {import('@shopify/hydrogen').OptimisticCartLine} OptimisticCartLine */
-/** @typedef {import('storefrontapi.generated').CartApiQueryFragment} CartApiQueryFragment */

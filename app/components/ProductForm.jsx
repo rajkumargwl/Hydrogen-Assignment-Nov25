@@ -4,17 +4,20 @@ import {useAside} from './Aside';
 
 /**
  * @param {{
- *   productOptions: MappedProductOptions[];
- *   selectedVariant: ProductFragment['selectedOrFirstAvailableVariant'];
+ * productOptions: MappedProductOptions[];
+ * selectedVariant: ProductFragment['selectedOrFirstAvailableVariant'];
+ * customPrice: string; // Price to be displayed and saved
+ * originalPrice: string; // Original price for comparison
  * }}
  */
-export function ProductForm({productOptions, selectedVariant}) {
+export function ProductForm({productOptions, selectedVariant, customPrice, 
+  originalPrice}) {
   const navigate = useNavigate();
   const {open} = useAside();
+
   return (
     <div className="product-form">
       {productOptions.map((option) => {
-        // If there is only a single value in the option values, don't display the option
         if (option.optionValues.length === 1) return null;
 
         return (
@@ -34,10 +37,6 @@ export function ProductForm({productOptions, selectedVariant}) {
                 } = value;
 
                 if (isDifferentProduct) {
-                  // SEO
-                  // When the variant is a combined listing child product
-                  // that leads to a different url, we need to render it
-                  // as an anchor tag
                   return (
                     <Link
                       className="product-options-item"
@@ -57,11 +56,6 @@ export function ProductForm({productOptions, selectedVariant}) {
                     </Link>
                   );
                 } else {
-                  // SEO
-                  // When the variant is an update to the search param,
-                  // render it as a button with javascript navigating to
-                  // the variant so that SEO bots do not index these as
-                  // duplicated links
                   return (
                     <button
                       type="button"
@@ -95,33 +89,46 @@ export function ProductForm({productOptions, selectedVariant}) {
           </div>
         );
       })}
-      <AddToCartButton
-        disabled={!selectedVariant || !selectedVariant.availableForSale}
-        onClick={() => {
-          open('cart');
-        }}
-        lines={
-          selectedVariant
-            ? [
-                {
-                  merchandiseId: selectedVariant.id,
-                  quantity: 1,
-                  selectedVariant,
-                },
-              ]
-            : []
-        }
-      >
-        {selectedVariant?.availableForSale ? 'Add to cart' : 'Sold out'}
-      </AddToCartButton>
+
+
+<AddToCartButton
+  disabled={!selectedVariant || !selectedVariant.availableForSale}
+  onClick={() => {
+    open('cart');
+  }}
+  lines={
+    selectedVariant
+      ? [
+          {
+            merchandiseId: selectedVariant.id,
+            quantity: 1,
+            attributes: [
+              {
+                key: '_custom_unit_price',
+                value: customPrice ?? '', 
+              },
+              {
+                key: '_original_unit_price',
+                value: originalPrice ?? '', 
+              },
+            ],
+          },
+        ]
+      : []
+  }
+>
+  {selectedVariant?.availableForSale ? 'Add to cart' : 'Sold out'}
+</AddToCartButton>
+
+
     </div>
   );
 }
 
 /**
  * @param {{
- *   swatch?: Maybe<ProductOptionValueSwatch> | undefined;
- *   name: string;
+ * swatch?: Maybe<ProductOptionValueSwatch> | undefined;
+ * name: string;
  * }}
  */
 function ProductOptionSwatch({swatch, name}) {
