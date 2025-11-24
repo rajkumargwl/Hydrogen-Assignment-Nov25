@@ -339,7 +339,12 @@ button.reset:hover:not(:has(> *)) {
   align-items: center;
   gap: 1rem;
 }
-
+.all-products-heading {
+  font-size: 3rem;
+  font-weight: bold;
+  margin-bottom: 3rem;
+  text-align: center;
+}
 /*
 * --------------------------------------------------
 * routes/__index
@@ -414,8 +419,8 @@ button.reset:hover:not(:has(> *)) {
 }
 
 .product-item img {
-  height: auto;
-  width: 100%;
+  object-fit: contain;
+  height: 100%;
 }
 
 /*

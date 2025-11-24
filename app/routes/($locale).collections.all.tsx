@@ -1,67 +1,58 @@
-import type {Route} from './+types/collections.all';
 import {useLoaderData} from 'react-router';
-import {getPaginationVariables, Image, Money} from '@shopify/hydrogen';
+import {getPaginationVariables} from '@shopify/hydrogen';
 import {PaginatedResourceSection} from '~/components/PaginatedResourceSection';
 import {ProductItem} from '~/components/ProductItem';
-import type {CollectionItemFragment} from 'storefrontapi.generated';
+import {QUICK_VIEW_METAOBJECT_QUERY, PRODUCT_ITEM_FRAGMENT} from '~/lib/queries';
 
-export const meta: Route.MetaFunction = () => {
+export const meta = () => {
   return [{title: `Hydrogen | Products`}];
 };
 
-export async function loader(args: Route.LoaderArgs) {
-  // Start fetching non-critical data without blocking time to first byte
+export async function loader(args: any) {
   const deferredData = loadDeferredData(args);
-
-  // Await the critical data required to render initial state of the page
   const criticalData = await loadCriticalData(args);
-
   return {...deferredData, ...criticalData};
 }
 
-/**
- * Load data necessary for rendering content above the fold. This is the critical data
- * needed to render the page. If it's unavailable, the whole page should 400 or 500 error.
- */
-async function loadCriticalData({context, request}: Route.LoaderArgs) {
+async function loadCriticalData({context, request}: any) {
   const {storefront} = context;
   const paginationVariables = getPaginationVariables(request, {
     pageBy: 8,
   });
 
-  const [{products}] = await Promise.all([
+  const [{products}, quickViewConfig] = await Promise.all([
     storefront.query(CATALOG_QUERY, {
       variables: {...paginationVariables},
     }),
-    // Add other queries here, so that they are loaded in parallel
+    context.storefront.query(QUICK_VIEW_METAOBJECT_QUERY),
   ]);
-  return {products};
+  
+  return {
+    products,
+    quickViewConfig: quickViewConfig.metaobjects?.nodes?.[0] || null,
+  };
 }
 
-/**
- * Load data for rendering content below the fold. This data is deferred and will be
- * fetched after the initial page load. If it's unavailable, the page should still 200.
- * Make sure to not throw any errors here, as it will cause the page to 500.
- */
-function loadDeferredData({context}: Route.LoaderArgs) {
+function loadDeferredData({context}: any) {
   return {};
 }
 
 export default function Collection() {
-  const {products} = useLoaderData<typeof loader>();
+  const {products, quickViewConfig}: any = useLoaderData();
 
   return (
     <div className="collection">
       <h1>Products</h1>
-      <PaginatedResourceSection<CollectionItemFragment>
+      <PaginatedResourceSection
         connection={products}
         resourcesClassName="products-grid"
       >
-        {({node: product, index}) => (
+        {({node: product, index}: any) => (
           <ProductItem
             key={product.id}
             product={product}
             loading={index < 8 ? 'eager' : undefined}
+            quickViewConfig={quickViewConfig}
           />
         )}
       </PaginatedResourceSection>
@@ -69,35 +60,8 @@ export default function Collection() {
   );
 }
 
-const COLLECTION_ITEM_FRAGMENT = `#graphql
-  fragment MoneyCollectionItem on MoneyV2 {
-    amount
-    currencyCode
-  }
-  fragment CollectionItem on Product {
-    id
-    handle
-    title
-    featuredImage {
-      id
-      altText
-      url
-      width
-      height
-    }
-    priceRange {
-      minVariantPrice {
-        ...MoneyCollectionItem
-      }
-      maxVariantPrice {
-        ...MoneyCollectionItem
-      }
-    }
-  }
-` as const;
-
-// NOTE: https://shopify.dev/docs/api/storefront/latest/objects/product
 const CATALOG_QUERY = `#graphql
+  ${PRODUCT_ITEM_FRAGMENT}
   query Catalog(
     $country: CountryCode
     $language: LanguageCode
@@ -108,7 +72,7 @@ const CATALOG_QUERY = `#graphql
   ) @inContext(country: $country, language: $language) {
     products(first: $first, last: $last, before: $startCursor, after: $endCursor) {
       nodes {
-        ...CollectionItem
+        ...ProductItem
       }
       pageInfo {
         hasPreviousPage
@@ -118,5 +82,4 @@ const CATALOG_QUERY = `#graphql
       }
     }
   }
-  ${COLLECTION_ITEM_FRAGMENT}
-` as const;
+`;
