@@ -56,9 +56,16 @@ export async function loader({context, params, request}:Route.LoaderArgs) {
  */
 function getCustomPrice(product, variant = null) {
   // --- 1. Base Price ---
-  const baseMeta = variant?.customPrice?.value || product.customPrice?.value;
-  const base = baseMeta ? parseFloat(JSON.parse(baseMeta).amount) : 0;
+   const productOriginal = parseFloat(product.priceRange?.minVariantPrice?.amount) || 0;
+  const variantOriginal = parseFloat(variant?.price?.amount || 0);
 
+  // ---- 2️⃣ CUSTOM PRICE (if exists) ----
+  const customMeta = variant?.customPrice?.value || product.customPrice?.value;
+  const customPrice = customMeta ? parseFloat(JSON.parse(customMeta).amount) : null;
+
+  // ---- 3️⃣ PICK BASE PRICE ----
+  // Priority: variant custom > product custom > variant original > product original
+const base = customPrice ?? (variantOriginal || productOriginal);
   // --- 2. Discount Percentage ---
   const percentage =
     parseFloat(variant?.discountPercentage?.value) ||

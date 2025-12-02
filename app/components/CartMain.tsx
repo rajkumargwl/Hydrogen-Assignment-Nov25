@@ -16,8 +16,14 @@ export type CartMainProps = {
 function getCustomPrice(product, variant = null) {
   // --- 1. Base Price ---
   const baseMeta = product.customPrice?.value;
-  const base = baseMeta ? parseFloat(JSON.parse(baseMeta).amount) : 0;
-  // --- 2. Discount Percentage ---
+  const custom = baseMeta ? parseFloat(JSON.parse(baseMeta).amount) : null;
+
+  // If customPrice is null → fallback to variant.VariantPrice
+  const variantPrice = product?.VariantPrice
+    ? parseFloat(String(product.VariantPrice))
+    : 0;
+  const base = custom ?? variantPrice;
+  
   const percentage =
     parseFloat(variant?.discountPercentage?.value) ||
     parseFloat(product.discountPercentage?.value) ||
@@ -43,6 +49,7 @@ function getCustomPrice(product, variant = null) {
     isVariantPrice: !!variant, 
   };
 }
+
 async function testUpdateCatalogPrice(variantID,newPrice,compareAtPrice :any) {
     if(!variantID || !newPrice){
     return 'NO product in cart';
@@ -80,6 +87,7 @@ export function CartMain({layout, cart: originalCart}: CartMainProps) {
         if (!variantData) continue;
 
        const productObj = {
+        VariantPrice:variantData.basePrice,
         customPrice: variantData.customPrice
           ? { value: `{"amount":"${variantData.customPrice}","currency_code":"INR"}` }
           : null,
@@ -89,15 +97,16 @@ export function CartMain({layout, cart: originalCart}: CartMainProps) {
       // --- 3. Calculate final price ---
       const finalPriceObj = getCustomPrice(productObj);
       // --- 4. Compare with current cart line finalPrice ---
+
       const attrs = line.attributes || [];
       const currentFinalPriceAttr = attrs.find(a => a.key === "finalPrice");
       const currentFinalPrice = currentFinalPriceAttr ? parseFloat(currentFinalPriceAttr.value) : null;
-      if (currentFinalPrice !== finalPriceObj.finalPrice) {
-        // --- 5. Update catalog price ---
-
-        await testUpdateCatalogPrice(variantID, finalPriceObj.finalPrice,finalPriceObj.basePrice);
-
-    }
+      const variantPrice = variantData?.basePrice;
+        if(finalPriceObj.basePrice!==0){
+          await testUpdateCatalogPrice(variantID, finalPriceObj.finalPrice,finalPriceObj.basePrice);
+        }else{
+          await testUpdateCatalogPrice(variantID,finalPriceObj.finalPrice,variantPrice);
+        }
       }
   }
 

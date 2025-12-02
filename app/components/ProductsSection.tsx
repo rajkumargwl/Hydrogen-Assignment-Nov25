@@ -42,8 +42,10 @@ export default function ProductsSection({
   );
 }
 function getCustomPrice(product) {
-  const baseMeta = product.customPrice?.value;
-  const base = baseMeta ? parseFloat(JSON.parse(baseMeta).amount) : 0;
+ const customMeta = product.customPrice?.value;
+  const custom = customMeta ? parseFloat(JSON.parse(customMeta).amount) : null;
+  const originalPrice = parseFloat(product.price.replace(/[^0-9.]/g, "")) || 0;
+  const base = custom ?? originalPrice;
 
   const percentage = parseFloat(product.discountPercentage?.value || 0);
 

@@ -124,7 +124,24 @@ query Catalog (
               title
               description
             }
-            
+            price {
+        amount
+        currencyCode
+      }
+      compareAtPrice {
+        amount
+        currencyCode
+      }
+      # Add metafields if needed for custom price
+      customPrice: metafield(namespace: "custom", key: "price") {
+        value
+      }
+      discountPercentage: metafield(namespace: "custom", key: "discount_percentage") {
+        value
+      }
+      discountFixedAmount: metafield(namespace: "custom", key: "discount_fixed_amount") {
+        value
+      }
           }
         }
       }

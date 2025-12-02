@@ -34,6 +34,6 @@ export default defineConfig({
     },
   },
   server: {
-    allowedHosts: ['.tryhydrogen.dev','mike-viruses-spirits-travis.trycloudflare.com'],
+    allowedHosts: true
   },
 });

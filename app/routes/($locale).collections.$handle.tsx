@@ -102,25 +102,64 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
     currencyCode
   }
   fragment ProductItem on Product {
+  id
+  handle
+  title
+  featuredImage {
     id
-    handle
-    title
-    featuredImage {
-      id
-      altText
-      url
-      width
-      height
+    altText
+    url
+    width
+    height
+  }
+  priceRange {
+    minVariantPrice {
+      amount
+      currencyCode
     }
-    priceRange {
-      minVariantPrice {
-        ...MoneyProductItem
+    maxVariantPrice {
+      amount
+      currencyCode
+    }
+  }
+  variants(first: 50) {
+    nodes {
+      id
+      availableForSale
+      sku
+      title
+      selectedOptions {
+        name
+        value
       }
-      maxVariantPrice {
-        ...MoneyProductItem
+      image {
+        id
+        url
+        altText
+        width
+        height
+      }
+      price {
+        amount
+        currencyCode
+      }
+      compareAtPrice {
+        amount
+        currencyCode
+      }
+      # Add metafields if needed for custom price
+      customPrice: metafield(namespace: "custom", key: "price") {
+        value
+      }
+      discountPercentage: metafield(namespace: "custom", key: "discount_percentage") {
+        value
+      }
+      discountFixedAmount: metafield(namespace: "custom", key: "discount_fixed_amount") {
+        value
       }
     }
   }
+}
 ` as const;
 
 // NOTE: https://shopify.dev/docs/api/storefront/2022-04/objects/collection

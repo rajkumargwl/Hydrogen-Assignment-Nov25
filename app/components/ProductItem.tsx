@@ -9,20 +9,36 @@ import {useVariantUrl} from '~/lib/variants';
 import { AddToCartButton } from './AddToCartButton';
 import CustomPrice from './CustomPrice';
 import { useAside } from './Aside';
-function getCustomPrice(product: { customPrice: { value: any; }; discountPercentage: { value: any; }; discountFixedAmount: { value: any; }; }) {
+function getCustomPrice(
+  product: {
+    customPrice?: { value: any };
+    discountPercentage?: { value: any };
+    discountFixedAmount?: { value: any };
+  },
+  variant: { price?: { amount: string | number } }
+) {
+
+  // --- 1. Base price ---
   const baseMeta = product.customPrice?.value;
-  let base = 0;
+  let customPrice = null;
+
   if (baseMeta) {
     try {
       const parsed = JSON.parse(baseMeta) as { amount?: string | number };
-      base = parsed.amount != null ? parseFloat(String(parsed.amount)) : 0;
+      customPrice = parsed.amount != null ? parseFloat(String(parsed.amount)) : null;
     } catch {
-      base = 0;
+      customPrice = null;
     }
   }
 
+  // Fallback to variant price if customPrice is null
+  const variantPrice = parseFloat(String(variant?.price?.amount ?? 0)) || 0;
+  const base = customPrice ?? variantPrice;
+
+  // --- 2. Discount percentage ---
   const percentage = parseFloat(String(product.discountPercentage?.value ?? '0')) || 0;
 
+  // --- 3. Fixed discount ---
   const fixedMeta = product.discountFixedAmount?.value;
   let fixed = 0;
   if (fixedMeta) {
@@ -34,9 +50,9 @@ function getCustomPrice(product: { customPrice: { value: any; }; discountPercent
     }
   }
 
+  // --- 4. Apply discount ---
   const percentageDiscount = (base * percentage) / 100;
   const maxDiscount = Math.max(percentageDiscount, fixed);
-
   const finalPrice = base - maxDiscount;
 
   return {
@@ -46,6 +62,7 @@ function getCustomPrice(product: { customPrice: { value: any; }; discountPercent
     discountPercentage: percentage,
   };
 }
+
 export function ProductItem({
   product,
   loading,
@@ -58,8 +75,8 @@ export function ProductItem({
 }) {
   const variantUrl = useVariantUrl(product.handle);
   const image = product.featuredImage;
-  const customPrice = getCustomPrice(product);
   const firstAvailableVariant = product.variants?.nodes[0];
+  const customPrice = getCustomPrice(product,firstAvailableVariant);
   const isAvailable = firstAvailableVariant?.availableForSale || false;
   const {open} = useAside();
   return (
